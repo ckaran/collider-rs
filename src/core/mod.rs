@@ -22,8 +22,8 @@ pub use self::collider::*;
 use std::f64;
 
 use self::dur_hitbox::{DurHbVel, DurHitbox};
-use geom::shape::PlacedBounds;
-use geom::*;
+use crate::geom::shape::PlacedBounds;
+use crate::geom::*;
 
 const HIGH_TIME: f64 = 1e50;
 

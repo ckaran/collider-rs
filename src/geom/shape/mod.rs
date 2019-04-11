@@ -14,9 +14,9 @@
 
 use std::cmp::Ordering;
 
-use core::{HbVel, Hitbox};
-use float::n64;
-use geom::{v2, Card, CardMask, DirVec2, Vec2};
+use crate::core::{HbVel, Hitbox};
+use crate::float::n64;
+use crate::geom::{v2, Card, CardMask, DirVec2, Vec2};
 
 mod normals;
 #[cfg(test)]

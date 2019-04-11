@@ -14,9 +14,9 @@
 
 mod solvers;
 
-use core;
-use geom::shape::PlacedBounds;
-use geom::*;
+use crate::core;
+use crate::geom::shape::PlacedBounds;
+use crate::geom::*;
 use std::f64;
 
 // DurHitbox (and DurHbVel) is almost identical to Hitbox (and HbVel), except
@@ -109,8 +109,8 @@ impl DurHitbox {
 
 #[cfg(test)]
 mod tests {
-    use core::dur_hitbox::DurHitbox;
-    use geom::*;
+    use crate::core::dur_hitbox::DurHitbox;
+    use crate::geom::*;
     use std::f64;
 
     #[test]

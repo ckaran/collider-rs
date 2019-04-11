@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core;
-use core::dur_hitbox::DurHitbox;
-use geom::shape::PlacedBounds;
-use geom::*;
+use crate::core;
+use crate::core::dur_hitbox::DurHitbox;
+use crate::geom::shape::PlacedBounds;
+use crate::geom::*;
+use crate::util;
 use std::f64;
-use util;
 
 // This module contains methods to solve for the collision/separation time
 // of two hitboxes.

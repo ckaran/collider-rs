@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::{HbId, HIGH_TIME};
-use float::n64;
+use crate::core::{HbId, HIGH_TIME};
+use crate::float::n64;
+use crate::util::{OneOrTwo, TightSet};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::f64;
 use std::hash::{Hash, Hasher};
-use util::{OneOrTwo, TightSet};
 
 // This module contains Collider events that are queued to occur at given
 // simulation times. The EventManager can queue and cancel these events.

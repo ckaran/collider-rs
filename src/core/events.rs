@@ -20,12 +20,18 @@ use std::f64;
 use std::hash::{Hash, Hasher};
 use util::{OneOrTwo, TightSet};
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 // This module contains Collider events that are queued to occur at given
 // simulation times. The EventManager can queue and cancel these events.
 
 const PAIR_BASE: u64 = 0x8000_0000_0000_0000;
 
 #[derive(Copy, Clone)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct EventKey {
     time: f64,
     index: u64,
@@ -72,6 +78,7 @@ pub trait EventKeysMap {
 }
 
 #[derive(Copy, Clone)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub enum InternalEvent {
     #[cfg(debug_assertions)]
     PanicSmallHitbox(HbId),
@@ -99,6 +106,7 @@ impl InternalEvent {
     }
 }
 
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct EventManager {
     events: BTreeMap<EventKey, InternalEvent>,
     next_event_index: u64,

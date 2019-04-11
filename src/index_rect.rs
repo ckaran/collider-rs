@@ -14,7 +14,13 @@
 
 // IndexRect represents a non-empty rectangular index range in a 2-D grid.
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 #[derive(PartialEq, Eq, Copy, Clone)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct IndexRect {
     start: (i32, i32),
     end: (i32, i32),
@@ -39,6 +45,7 @@ impl IndexRect {
     }
 }
 
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Iter {
     rect: IndexRect,
     val: Option<(i32, i32)>,

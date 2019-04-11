@@ -19,12 +19,18 @@ use geom::shape::PlacedBounds;
 use geom::*;
 use std::f64;
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 // DurHitbox (and DurHbVel) is almost identical to Hitbox (and HbVel), except
 // it uses a `duration` (amount of time until invalidation of the hitbox)
 // rather than an `end_time` (time of the invalidation of the hitbox). This
 // new struct is meant to make that distinction clear.
 
 #[derive(Clone)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct DurHbVel {
     pub value: Vec2,
     pub resize: Vec2,
@@ -63,6 +69,7 @@ impl PlacedBounds for DurHbVel {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct DurHitbox {
     pub value: PlacedShape,
     pub vel: DurHbVel,

@@ -12,11 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 use super::{Collider, HbEvent, HbId, HbProfile, HbVel};
 use geom::{v2, Shape};
 use std::f64;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 struct TestHbProfile {
     id: HbId,
 }

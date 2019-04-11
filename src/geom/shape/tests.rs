@@ -14,6 +14,11 @@
 
 use geom::*;
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 #[test]
 fn test_circle_advance() {
     let shape_1 = Shape::circle(2.0).place(v2(3.0, 5.0));

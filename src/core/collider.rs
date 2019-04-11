@@ -21,12 +21,18 @@ use geom::PlacedShape;
 use std::mem;
 use util::TightSet;
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 // TODO check that floating point values are within a good range when adding/updating hitboxes
 
 /// A structure that tracks hitboxes and returns collide/separate events.
 ///
 /// Collider manages events using a "simulation time" that the user updates as
 /// necessary. This time starts at `0.0`.
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Collider<P: HbProfile> {
     hitboxes: FnvHashMap<HbId, HitboxInfo<P>>,
     time: f64,
@@ -491,6 +497,7 @@ impl<P: HbProfile> HitboxInfo<P> {
 
 /// A hitbox event type that may be returned from a `Collider` instance.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub enum HbEvent {
     /// Occurs when two hitboxes collide
     Collide,

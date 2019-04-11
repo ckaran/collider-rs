@@ -22,18 +22,25 @@ use std::collections::hash_map;
 use std::f64;
 use util::TightSet;
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 // Grid is a sparse 2D grid implemented as a HashMap. This is used as the
 // pruning method to decide which hitboxes to check for collisions.
 
 //TODO add unit tests for Grid
 
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 struct GridKey {
     coord: (i32, i32),
     group: HbGroup,
 }
 
 #[derive(Copy, Clone)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 struct GridArea {
     rect: IndexRect,
     group: HbGroup,
@@ -45,6 +52,7 @@ impl GridArea {
     }
 }
 
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Grid {
     map: FnvHashMap<GridKey, TightSet<HbId>>,
     cell_width: f64,

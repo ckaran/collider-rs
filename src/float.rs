@@ -15,6 +15,11 @@
 use std::cmp::Ordering;
 use std::f64;
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 // N64 wraps a non-NaN f64 value and implements Ord.
 
 pub fn n64(val: f64) -> N64 {
@@ -22,6 +27,7 @@ pub fn n64(val: f64) -> N64 {
 }
 
 #[derive(PartialEq, PartialOrd, Copy, Clone, Default)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct N64 {
     val: f64,
 }

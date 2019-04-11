@@ -22,8 +22,14 @@ mod normals;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 /// Enumeration of kinds of shapes used by Collider.
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Hash)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub enum ShapeKind {
     /// Circle.  Requires width and height to match.
     Circle,
@@ -35,6 +41,7 @@ pub enum ShapeKind {
 ///
 /// Each shape has a `width` and `height`, which are allowed to be negative.
 #[derive(PartialEq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Shape {
     kind: ShapeKind,
     dims: Vec2,
@@ -103,6 +110,7 @@ impl Shape {
 
 /// Represents a shape with a position.
 #[derive(PartialEq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct PlacedShape {
     /// The position of the center of the shape.
     pub pos: Vec2,
@@ -338,6 +346,7 @@ fn interval_sector(left: f64, right: f64, val: f64) -> Ordering {
 }
 
 #[derive(PartialEq, Eq, Copy, Clone)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub(crate) struct Sector {
     x: Ordering,
     y: Ordering,

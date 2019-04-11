@@ -15,8 +15,14 @@
 use geom::card::Card;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+#[cfg(feature = "use_serde")]
+extern crate serde;
+#[cfg(feature = "use_serde")]
+use self::serde::*;
+
 /// A 2-D Cartesian vector using finite `f64` values.
 #[derive(PartialEq, Copy, Clone, Debug, Default)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Vec2 {
     /// The x-coordinate.
     pub x: f64,
@@ -181,6 +187,7 @@ pub fn v2(x: f64, y: f64) -> Vec2 {
 /// length. Such distinctions are necessary when describing the normal distance
 /// between `PlacedShape`s.
 #[derive(PartialEq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct DirVec2 {
     dir: Vec2,
     len: f64,

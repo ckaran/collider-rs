@@ -452,6 +452,7 @@ impl<P: HbProfile> EventKeysMap for FnvHashMap<HbId, HitboxInfo<P>> {
     }
 }
 
+#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 struct HitboxInfo<P: HbProfile> {
     profile: P,
     hitbox: Hitbox,

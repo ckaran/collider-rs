@@ -18,7 +18,7 @@ default = []
 # If you use this feature, then the internal state of the collider can be
 # serialized and deserialized via serde.  In most cases this isn't needed, but
 # should you need it, you will **really need it**.
-use_serde = ["serde", "typetag"]
+use_serde = ["serde", "serde_json"]
 
 [dependencies]
 fnv = "^1.0.3"
@@ -28,4 +28,4 @@ fnv = "^1.0.3"
 # of the collider and reload it at some other point in the future, this will be
 # extremely useful.
 serde = {version = "1.0.90", features = ["derive", "rc", "std"], optional = true}
-typetag = {version = "0.1.2", optional = true}
+serde_json = {version = "1.0.39", optional = true}

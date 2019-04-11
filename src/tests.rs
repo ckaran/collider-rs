@@ -287,4 +287,17 @@ fn test_separate_initial_overlap() {
     advance(&mut collider, 1.5);
 }
 
+#[cfg(all(test, feature = "use_serde"))]
+pub(crate) mod tests {
+    use super::*;
+    use serde_json;
+
+    #[test]
+    fn test_serde_json() {
+        let collider = Collider::<TestHbProfile>::new(4.0, 0.25);
+        let serialized = serde_json::to_string(&collider).unwrap();
+        let c2: Collider<TestHbProfile> = serde_json::from_str(&serialized).unwrap();
+    }
+}
+
 //TODO test custom interactivities...

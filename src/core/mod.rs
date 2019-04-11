@@ -214,7 +214,6 @@ static DEFAULT_GROUPS: [HbGroup; 1] = [0];
 /// ID for the hitbox, but a user may define additional metadata for identfying
 /// the hitbox and describing interactivity. An HbProfile must implement the
 /// `Copy` trait and should not take up much memory.
-//#[cfg_attr(feature = "use_serde", typetag::serde)]
 pub trait HbProfile: Copy {
     /// A unique identifier for the hitbox.
     ///

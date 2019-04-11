@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::dur_hitbox::DurHitbox;
-use core::{HbGroup, HbId, Hitbox};
+use crate::core::dur_hitbox::DurHitbox;
+use crate::core::{HbGroup, HbId, Hitbox};
 use fnv::{FnvHashMap, FnvHashSet};
-use geom::shape::{PlacedBounds, PlacedShape};
-use index_rect::IndexRect;
+use crate::geom::shape::{PlacedBounds, PlacedShape};
+use crate::index_rect::IndexRect;
 use std::cmp;
 use std::collections::hash_map;
 use std::f64;
-use util::TightSet;
+use crate::util::TightSet;
 
 #[cfg(feature = "use_serde")]
 extern crate serde;

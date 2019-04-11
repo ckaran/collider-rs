@@ -14,9 +14,9 @@
 
 mod solvers;
 
-use core;
-use geom::shape::PlacedBounds;
-use geom::*;
+use crate::core;
+use crate::geom::shape::PlacedBounds;
+use crate::geom::*;
 use std::f64;
 
 #[cfg(feature = "use_serde")]
@@ -116,8 +116,8 @@ impl DurHitbox {
 
 #[cfg(test)]
 mod tests {
-    use core::dur_hitbox::DurHitbox;
-    use geom::*;
+    use crate::core::dur_hitbox::DurHitbox;
+    use crate::geom::*;
     use std::f64;
 
     #[test]

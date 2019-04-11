@@ -9,6 +9,7 @@ repository = "https://github.com/SergiusIW/collider-rs"
 readme = "README.md"
 keywords = ["collision", "geometry", "continuous", "2D", "game"]
 license = "Apache-2.0"
+edition = "2018"
 
 [features]
 # In most cases you will just want to use the bare collider package.

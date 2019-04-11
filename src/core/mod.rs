@@ -22,8 +22,8 @@ pub use self::collider::*;
 use std::f64;
 
 use self::dur_hitbox::{DurHbVel, DurHitbox};
-use geom::shape::PlacedBounds;
-use geom::*;
+use crate::geom::shape::PlacedBounds;
+use crate::geom::*;
 
 #[cfg(feature = "use_serde")]
 extern crate serde;
@@ -214,7 +214,7 @@ static DEFAULT_GROUPS: [HbGroup; 1] = [0];
 /// ID for the hitbox, but a user may define additional metadata for identfying
 /// the hitbox and describing interactivity. An HbProfile must implement the
 /// `Copy` trait and should not take up much memory.
-#[cfg_attr(feature = "use_serde", typetag::serde)]
+//#[cfg_attr(feature = "use_serde", typetag::serde)]
 pub trait HbProfile: Copy {
     /// A unique identifier for the hitbox.
     ///

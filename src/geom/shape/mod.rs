@@ -13,10 +13,9 @@
 // limitations under the License.
 
 use std::cmp::Ordering;
-
-use core::{HbVel, Hitbox};
-use float::n64;
-use geom::{v2, Card, CardMask, DirVec2, Vec2};
+use crate::core::{HbVel, Hitbox};
+use crate::float::n64;
+use crate::geom::{v2, Card, CardMask, DirVec2, Vec2};
 
 mod normals;
 #[cfg(test)]
@@ -345,10 +344,21 @@ fn interval_sector(left: f64, right: f64, val: f64) -> Ordering {
     }
 }
 
+#[cfg(feature = "use_serde")]
+#[derive(Serialize, Deserialize)]
+#[serde(remote = "Ordering")]
+enum OrderingDefForSerde {
+    Less = -1,
+    Equal = 0,
+    Greater = 1,
+}
+
 #[derive(PartialEq, Eq, Copy, Clone)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub(crate) struct Sector {
+    #[cfg_attr(feature = "use_serde", serde(with = "OrderingDefForSerde"))]
     x: Ordering,
+    #[cfg_attr(feature = "use_serde", serde(with = "OrderingDefForSerde"))]
     y: Ordering,
 }
 

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::dur_hitbox::DurHitbox;
-use core::events::{EventKey, EventKeysMap, EventManager, InternalEvent};
-use core::grid::Grid;
-use core::{HbGroup, HbId, HbProfile, HbVel, Hitbox, HIGH_TIME};
+use crate::core::dur_hitbox::DurHitbox;
+use crate::core::events::{EventKey, EventKeysMap, EventManager, InternalEvent};
+use crate::core::grid::Grid;
+use crate::core::{HbGroup, HbId, HbProfile, HbVel, Hitbox, HIGH_TIME};
 use fnv::FnvHashMap;
-use geom::PlacedShape;
+use crate::geom::PlacedShape;
 use std::mem;
-use util::TightSet;
+use crate::util::TightSet;
 
 #[cfg(feature = "use_serde")]
 extern crate serde;

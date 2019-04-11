@@ -95,4 +95,4 @@ mod index_rect;
 mod tests;
 mod util;
 
-pub use core::*;
+pub use crate::core::*;

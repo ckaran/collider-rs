@@ -18,7 +18,7 @@ extern crate serde;
 use self::serde::*;
 
 use super::{Collider, HbEvent, HbId, HbProfile, HbVel};
-use geom::{v2, Shape};
+use crate::geom::{v2, Shape};
 use std::f64;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]

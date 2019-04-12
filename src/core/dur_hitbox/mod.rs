@@ -30,7 +30,7 @@ use self::serde::*;
 // rather than an `end_time` (time of the invalidation of the hitbox). This
 // new struct is meant to make that distinction clear.
 
-#[derive(Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct DurHbVel {
     pub value: Vec2,
@@ -69,7 +69,7 @@ impl PlacedBounds for DurHbVel {
     }
 }
 
-#[derive(Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct DurHitbox {
     pub value: PlacedShape,

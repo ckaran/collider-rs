@@ -39,7 +39,7 @@ pub fn quad_root_ascending(a: N64, b: N64, c: N64) -> Option<N64> {
 const MIN_TIGHT_SET_CAPACITY: usize = 4;
 
 // a HashSet that will automatically shrink down in capacity to save space
-#[derive(Clone)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct TightSet<T: Hash + Eq> {
     set: FnvHashSet<T>,
@@ -106,6 +106,7 @@ mod one_or_two {
     #[cfg(feature = "use_serde")]
     use super::*;
 
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
     #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
     pub enum OneOrTwo<T: Copy + Eq> {
         One(T),
@@ -129,6 +130,7 @@ mod one_or_two {
         }
     }
 
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
     #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
     pub struct Iter<T: Copy + Eq> {
         one_or_two: OneOrTwo<T>,

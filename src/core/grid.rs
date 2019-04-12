@@ -33,14 +33,14 @@ use self::serde::*;
 
 //TODO add unit tests for Grid
 
-#[derive(PartialEq, Eq, Copy, Clone, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 struct GridKey {
     coord: (i32, i32),
     group: HbGroup,
 }
 
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 struct GridArea {
     rect: IndexRect,
@@ -53,6 +53,7 @@ impl GridArea {
     }
 }
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Grid {
     map: FnvHashMap<GridKey, TightSet<HbId>>,

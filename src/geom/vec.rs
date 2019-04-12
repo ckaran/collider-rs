@@ -22,7 +22,7 @@ extern crate serde;
 use self::serde::*;
 
 /// A 2-D Cartesian vector using finite `N64` values.
-#[derive(PartialEq, Copy, Clone, Debug, Default)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Default, Hash)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Vec2 {
     /// The x-coordinate.

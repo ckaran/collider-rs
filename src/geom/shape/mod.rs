@@ -27,7 +27,7 @@ extern crate serde;
 use self::serde::*;
 
 /// Enumeration of kinds of shapes used by Collider.
-#[derive(PartialEq, Eq, Copy, Clone, Debug, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub enum ShapeKind {
     /// Circle.  Requires width and height to match.
@@ -39,7 +39,7 @@ pub enum ShapeKind {
 /// Represents a shape, without any position.
 ///
 /// Each shape has a `width` and `height`, which are allowed to be negative.
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Shape {
     kind: ShapeKind,
@@ -108,7 +108,7 @@ impl Shape {
 }
 
 /// Represents a shape with a position.
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct PlacedShape {
     /// The position of the center of the shape.
@@ -344,6 +344,7 @@ fn interval_sector(left: N64, right: N64, val: N64) -> Ordering {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg(feature = "use_serde")]
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "Ordering")]
@@ -353,7 +354,7 @@ enum OrderingDefForSerde {
     Greater = 1,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub(crate) struct Sector {
     #[cfg_attr(feature = "use_serde", serde(with = "OrderingDefForSerde"))]

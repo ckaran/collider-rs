@@ -19,7 +19,7 @@ extern crate serde;
 #[cfg(feature = "use_serde")]
 use self::serde::*;
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct IndexRect {
     start: (i32, i32),
@@ -45,6 +45,7 @@ impl IndexRect {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Iter {
     rect: IndexRect,

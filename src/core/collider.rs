@@ -33,6 +33,7 @@ use self::serde::*;
 ///
 /// Collider manages events using a "simulation time" that the user updates as
 /// necessary. This time starts at `0.0`.
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Collider<P: HbProfile> {
     hitboxes: FnvHashMap<HbId, HitboxInfo<P>>,
@@ -453,6 +454,7 @@ impl<P: HbProfile> EventKeysMap for FnvHashMap<HbId, HitboxInfo<P>> {
     }
 }
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 struct HitboxInfo<P: HbProfile> {
     profile: P,
@@ -498,7 +500,7 @@ impl<P: HbProfile> HitboxInfo<P> {
 }
 
 /// A hitbox event type that may be returned from a `Collider` instance.
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub enum HbEvent {
     /// Occurs when two hitboxes collide

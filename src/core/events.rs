@@ -30,7 +30,7 @@ use self::serde::*;
 
 const PAIR_BASE: u64 = 0x8000_0000_0000_0000;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct EventKey {
     time: N64,
@@ -77,7 +77,7 @@ pub trait EventKeysMap {
     fn event_keys_mut(&mut self, id: HbId) -> &mut TightSet<EventKey>;
 }
 
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub enum InternalEvent {
     #[cfg(debug_assertions)]
@@ -106,6 +106,7 @@ impl InternalEvent {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct EventManager {
     events: BTreeMap<EventKey, InternalEvent>,

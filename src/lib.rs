@@ -45,7 +45,7 @@
 //! use collider::geom::{Shape, v2};
 //! use noisy_float::prelude::*;
 //!
-//! #[derive(Copy, Clone, Debug)]
+//! #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 //! struct DemoHbProfile { id: HbId } // add any additional identfying data to this struct
 //!
 //! impl HbProfile for DemoHbProfile {

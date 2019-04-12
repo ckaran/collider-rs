@@ -60,7 +60,7 @@ pub struct HbVel {
     /// Collider will panic if the end time is exceeded without update, at least
     /// in unoptimized builds.  It is ultimately the user's responsibility to
     /// ensure that end times are not exceeded.
-    pub end_time: f64,
+    pub end_time: N64,
 }
 
 impl HbVel {
@@ -70,13 +70,13 @@ impl HbVel {
         HbVel {
             value,
             resize: Vec2::zero(),
-            end_time: f64::INFINITY,
+            end_time: n64(f64::INFINITY),
         }
     }
 
     /// Creates an `HbVel` with the given `value` and `end_time`.
     #[inline]
-    pub fn moving_until(value: Vec2, end_time: f64) -> HbVel {
+    pub fn moving_until(value: Vec2, end_time: N64) -> HbVel {
         HbVel {
             value,
             resize: Vec2::zero(),
@@ -90,13 +90,13 @@ impl HbVel {
         HbVel {
             value: Vec2::zero(),
             resize: Vec2::zero(),
-            end_time: f64::INFINITY,
+            end_time: n64(f64::INFINITY),
         }
     }
 
     /// Creates a stationary `HbVel` with the given `end_time`.
     #[inline]
-    pub fn still_until(end_time: f64) -> HbVel {
+    pub fn still_until(end_time: N64) -> HbVel {
         HbVel {
             value: Vec2::zero(),
             resize: Vec2::zero(),
@@ -144,12 +144,12 @@ impl Hitbox {
         Hitbox { value, vel }
     }
 
-    fn advanced_shape(&self, time: f64) -> PlacedShape {
-        assert!(time < HIGH_TIME, "requires time < {}", HIGH_TIME);
+    fn advanced_shape(&self, time: N64) -> PlacedShape {
+        assert!(time < n64(HIGH_TIME), "requires time < {}", n64(HIGH_TIME));
         self.value.advance(self.vel.value, self.vel.resize, time)
     }
 
-    fn validate(&self, min_size: f64, present_time: f64) {
+    fn validate(&self, min_size: N64, present_time: N64) {
         assert!(
             !self.vel.end_time.is_nan() && self.vel.end_time >= present_time,
             "end time must exceed present time"
@@ -167,20 +167,20 @@ impl Hitbox {
         );
     }
 
-    fn time_until_too_small(&self, min_size: f64) -> f64 {
-        let min_size = min_size * 0.9;
+    fn time_until_too_small(&self, min_size: N64) -> N64 {
+        let min_size = min_size * n64(0.9);
         assert!(self.value.dims().x > min_size && self.value.dims().y > min_size);
-        let mut time = f64::INFINITY;
-        if self.vel.resize.x < 0.0 {
+        let mut time = n64(f64::INFINITY);
+        if self.vel.resize.x < n64(0.0) {
             time = time.min((min_size - self.value.dims().x) / self.vel.value.x);
         }
-        if self.vel.resize.y < 0.0 {
+        if self.vel.resize.y < n64(0.0) {
             time = time.min((min_size - self.value.dims().y) / self.vel.value.y);
         }
         time
     }
 
-    fn to_dur_hitbox(&self, time: f64) -> DurHitbox {
+    fn to_dur_hitbox(&self, time: N64) -> DurHitbox {
         assert!(time <= self.vel.end_time);
         DurHitbox {
             value: self.value,

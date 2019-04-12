@@ -25,14 +25,14 @@ use std::hash::Hash;
 pub use self::one_or_two::OneOrTwo;
 
 // returns the ascending root of a quadratic polynomial ax^2 + bx + c
-pub fn quad_root_ascending(a: f64, b: f64, c: f64) -> Option<f64> {
-    let determinant = b * b - a * c * 4.0;
-    if determinant <= 0.0 {
+pub fn quad_root_ascending(a: N64, b: N64, c: N64) -> Option<N64> {
+    let determinant = b * b - a * c * n64(4.0);
+    if determinant <= n64(0.0) {
         None
-    } else if b >= 0.0 {
-        Some((c * 2.0) / (-b - determinant.sqrt()))
+    } else if b >= n64(0.0) {
+        Some((c * n64(2.0)) / (-b - determinant.sqrt()))
     } else {
-        Some((-b + determinant.sqrt()) / (a * 2.0))
+        Some((-b + determinant.sqrt()) / (a * n64(2.0)))
     }
 }
 
@@ -158,11 +158,11 @@ mod tests {
 
     #[test]
     fn test_quad_root_ascending() {
-        assert!((quad_root_ascending(1e-14, 2.0, -1.0).unwrap() - 0.5).abs() < 1e-7);
-        assert!((quad_root_ascending(0.0, 2.0, -1.0).unwrap() - 0.5).abs() < 1e-7);
-        assert!((quad_root_ascending(100.0, -1.0, -1e-16).unwrap() - 0.01).abs() < 1e-7);
-        assert!(quad_root_ascending(0.0, -2.0, 1.0).unwrap().is_infinite());
-        assert!(quad_root_ascending(-3.0, 0.0, -1.0).is_none());
-        assert!(quad_root_ascending(1.0, 1.0, 1.0).is_none());
+        assert!((quad_root_ascending(n64(1e-14), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs() < n64(1e-7));
+        assert!((quad_root_ascending(n64(0.0), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs() < n64(1e-7));
+        assert!((quad_root_ascending(n64(100.0), n64(-1.0), n64(-1e-16)).unwrap() - n64(0.01)).abs() < n64(1e-7));
+        assert!(quad_root_ascending(n64(0.0), n64(-2.0), n64(1.0)).unwrap().is_infinite());
+        assert!(quad_root_ascending(n64(-3.0), n64(0.0), n64(-1.0)).is_none());
+        assert!(quad_root_ascending(n64(1.0), n64(1.0), n64(1.0)).is_none());
     }
 }

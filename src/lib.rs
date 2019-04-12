@@ -43,6 +43,7 @@
 //! ```
 //! use collider::{Collider, HbEvent, HbId, HbProfile};
 //! use collider::geom::{Shape, v2};
+//! use noisy_float::prelude::*;
 //!
 //! #[derive(Copy, Clone, Debug)]
 //! struct DemoHbProfile { id: HbId } // add any additional identfying data to this struct
@@ -52,18 +53,18 @@
 //!     fn can_interact(&self, _other: &DemoHbProfile) -> bool { true }
 //! }
 //!
-//! let mut collider: Collider<DemoHbProfile> = Collider::new(4.0, 0.01);
+//! let mut collider: Collider<DemoHbProfile> = Collider::new(n64(4.0), n64(0.01));
 //!
-//! let hitbox = Shape::square(2.0).place(v2(-10.0, 0.0)).moving(v2(1.0, 0.0));
+//! let hitbox = Shape::square(n64(2.0)).place(v2(n64(-10.0), n64(0.0))).moving(v2(n64(1.0), n64(0.0)));
 //! let overlaps = collider.add_hitbox(DemoHbProfile { id: 0 }, hitbox);
 //! assert!(overlaps.is_empty());
 //!
-//! let hitbox = Shape::square(2.0).place(v2(10.0, 0.0)).moving(v2(-1.0, 0.0));
+//! let hitbox = Shape::square(n64(2.0)).place(v2(n64(10.0), n64(0.0))).moving(v2(n64(-1.0), n64(0.0)));
 //! let overlaps = collider.add_hitbox(DemoHbProfile { id: 1 }, hitbox);
 //! assert!(overlaps.is_empty());
 //!
-//! while collider.time() < 20.0 {
-//!     let time = collider.next_time().min(20.0);
+//! while collider.time() < n64(20.0) {
+//!     let time = collider.next_time().min(n64(20.0));
 //!     collider.set_time(time);
 //!     if let Some((event, profile_1, profile_2)) = collider.next() {
 //!         println!("{:?} between {:?} and {:?} at time {}.",
@@ -72,7 +73,7 @@
 //!             println!("Speed of collided hitboxes is halved.");
 //!             for profile in [profile_1, profile_2].iter() {
 //!                 let mut hb_vel = collider.get_hitbox(profile.id()).vel;
-//!                 hb_vel.value *= 0.5;
+//!                 hb_vel.value *= n64(0.5);
 //!                 collider.set_hitbox_vel(profile.id(), hb_vel);
 //!             }
 //!         }
@@ -80,9 +81,9 @@
 //! }
 //!
 //! // the above loop prints the following events:
-//! //   Collide between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time 9.
+//! //   Collide between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time n64(9.)
 //! //   Speed of collided hitboxes is halved.
-//! //   Separate between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time 13.01.
+//! //   Separate between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time n64(13.01).
 //! ```
 
 extern crate fnv;

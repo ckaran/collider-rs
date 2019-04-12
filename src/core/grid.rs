@@ -56,27 +56,27 @@ impl GridArea {
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Grid {
     map: FnvHashMap<GridKey, TightSet<HbId>>,
-    cell_width: f64,
+    cell_width: N64,
 }
 
 impl Grid {
-    pub fn new(cell_width: f64) -> Grid {
+    pub fn new(cell_width: N64) -> Grid {
         Grid {
             map: FnvHashMap::default(),
             cell_width,
         }
     }
 
-    pub fn cell_period(&self, hitbox: &Hitbox, has_group: bool) -> f64 {
+    pub fn cell_period(&self, hitbox: &Hitbox, has_group: bool) -> N64 {
         if has_group {
             let speed = hitbox.vel.max_edge();
-            if speed <= 0.0 {
-                f64::INFINITY
+            if speed <= n64(0.0) {
+                n64(f64::INFINITY)
             } else {
                 self.cell_width / speed
             }
         } else {
-            f64::INFINITY
+            n64(f64::INFINITY)
         }
     }
 
@@ -108,14 +108,14 @@ impl Grid {
     }
 
     fn index_bounds(&self, bounds: &PlacedShape) -> IndexRect {
-        let start_x = (bounds.min_x() / self.cell_width).floor() as i32;
-        let start_y = (bounds.min_y() / self.cell_width).floor() as i32;
+        let start_x = (bounds.min_x() / self.cell_width).floor().raw() as i32;
+        let start_y = (bounds.min_y() / self.cell_width).floor().raw() as i32;
         let end_x = cmp::max(
-            (bounds.max_x() / self.cell_width).ceil() as i32,
+            (bounds.max_x() / self.cell_width).ceil().raw() as i32,
             start_x + 1,
         );
         let end_y = cmp::max(
-            (bounds.max_y() / self.cell_width).ceil() as i32,
+            (bounds.max_y() / self.cell_width).ceil().raw() as i32,
             start_y + 1,
         );
         IndexRect::new((start_x, start_y), (end_x, end_y))

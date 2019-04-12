@@ -53,7 +53,7 @@ impl Shape {
     /// Dimensions must be non-negative. If `kind` is `Circle`, then the width
     /// and height must match.
     pub fn new(kind: ShapeKind, dims: Vec2) -> Shape {
-        assert!(dims.x >= 0.0 && dims.y >= 0.0, "dims must be non-negative");
+        assert!(dims.x >= n64(0.0) && dims.y >= n64(0.0), "dims must be non-negative");
         Shape::with_any_dims(kind, dims)
     }
 
@@ -67,7 +67,7 @@ impl Shape {
 
     /// Constructs a new circle shape, using `diam` as the width and height.
     #[inline]
-    pub fn circle(diam: f64) -> Shape {
+    pub fn circle(diam: N64) -> Shape {
         Shape::new(ShapeKind::Circle, v2(diam, diam))
     }
 
@@ -80,7 +80,7 @@ impl Shape {
 
     /// Constructs a new axis-aligned square shape with the given `width`.
     #[inline]
-    pub fn square(width: f64) -> Shape {
+    pub fn square(width: N64) -> Shape {
         Shape::new(ShapeKind::Rect, v2(width, width))
     }
 
@@ -102,7 +102,7 @@ impl Shape {
         PlacedShape::new(pos, self)
     }
 
-    pub(crate) fn advance(&self, resize_vel: Vec2, elapsed: f64) -> Shape {
+    pub(crate) fn advance(&self, resize_vel: Vec2, elapsed: N64) -> Shape {
         Shape::with_any_dims(self.kind, self.dims + resize_vel * elapsed)
     }
 }
@@ -137,29 +137,29 @@ impl PlacedShape {
     }
 
     /// Returns the lowest x coordinate of the `PlacedShape`.
-    pub fn min_x(&self) -> f64 {
+    pub fn min_x(&self) -> N64 {
         self.bounds_left()
     }
 
     /// Returns the lowest y coordinate of the `PlacedShape`.
-    pub fn min_y(&self) -> f64 {
+    pub fn min_y(&self) -> N64 {
         self.bounds_bottom()
     }
 
     /// Returns the highest x coordinate of the `PlacedShape`.
-    pub fn max_x(&self) -> f64 {
+    pub fn max_x(&self) -> N64 {
         self.bounds_right()
     }
 
     /// Returns the highest y coordinate of the `PlacedShape`.
-    pub fn max_y(&self) -> f64 {
+    pub fn max_y(&self) -> N64 {
         self.bounds_top()
     }
 
     /// Returns `true` if the two shapes overlap, subject to negligible
     /// numerical error.
     pub fn overlaps(&self, other: &PlacedShape) -> bool {
-        self.normal_from(other).len() >= 0.0
+        self.normal_from(other).len() >= n64(0.0)
     }
 
     /// Returns a normal vector that points in the direction from `other` to
@@ -227,7 +227,7 @@ impl PlacedShape {
 
     /// Shorthand for `Hitbox::new(self, HbVel::moving_until(vel, end_time))`.
     #[inline]
-    pub fn moving_until(self, vel: Vec2, end_time: f64) -> Hitbox {
+    pub fn moving_until(self, vel: Vec2, end_time: N64) -> Hitbox {
         Hitbox::new(self, HbVel::moving_until(vel, end_time))
     }
 
@@ -239,7 +239,7 @@ impl PlacedShape {
 
     /// Shorthand for `Hitbox::new(self, HbVel::still_until(end_time))`.
     #[inline]
-    pub fn still_until(self, end_time: f64) -> Hitbox {
+    pub fn still_until(self, end_time: N64) -> Hitbox {
         Hitbox::new(self, HbVel::still_until(end_time))
     }
 
@@ -260,11 +260,11 @@ impl PlacedShape {
         let bottom = self.min_y().min(other.min_y());
 
         let shape = Shape::rect(v2(right - left, top - bottom));
-        let pos = v2(left + shape.dims().x * 0.5, bottom + shape.dims().y * 0.5);
+        let pos = v2(left + shape.dims().x * n64(0.5), bottom + shape.dims().y * n64(0.5));
         PlacedShape::new(pos, shape)
     }
 
-    pub(crate) fn advance(&self, vel: Vec2, resize_vel: Vec2, elapsed: f64) -> PlacedShape {
+    pub(crate) fn advance(&self, vel: Vec2, resize_vel: Vec2, elapsed: N64) -> PlacedShape {
         PlacedShape::new(
             self.pos + vel * elapsed,
             self.shape.advance(resize_vel, elapsed),
@@ -276,20 +276,20 @@ pub(crate) trait PlacedBounds {
     fn bounds_center(&self) -> &Vec2;
     fn bounds_dims(&self) -> &Vec2;
 
-    fn bounds_bottom(&self) -> f64 {
-        self.bounds_center().y - self.bounds_dims().y * 0.5
+    fn bounds_bottom(&self) -> N64 {
+        self.bounds_center().y - self.bounds_dims().y * n64(0.5)
     }
-    fn bounds_left(&self) -> f64 {
-        self.bounds_center().x - self.bounds_dims().x * 0.5
+    fn bounds_left(&self) -> N64 {
+        self.bounds_center().x - self.bounds_dims().x * n64(0.5)
     }
-    fn bounds_top(&self) -> f64 {
-        self.bounds_center().y + self.bounds_dims().y * 0.5
+    fn bounds_top(&self) -> N64 {
+        self.bounds_center().y + self.bounds_dims().y * n64(0.5)
     }
-    fn bounds_right(&self) -> f64 {
-        self.bounds_center().x + self.bounds_dims().x * 0.5
+    fn bounds_right(&self) -> N64 {
+        self.bounds_center().x + self.bounds_dims().x * n64(0.5)
     }
 
-    fn edge(&self, card: Card) -> f64 {
+    fn edge(&self, card: Card) -> N64 {
         match card {
             Card::MinusY => -self.bounds_bottom(),
             Card::MinusX => -self.bounds_left(),
@@ -298,15 +298,15 @@ pub(crate) trait PlacedBounds {
         }
     }
 
-    fn max_edge(&self) -> f64 {
+    fn max_edge(&self) -> N64 {
         Card::values()
             .iter()
             .map(|&card| self.edge(card).abs())
-            .max_by_key(|&edge| n64(edge))
+            .max_by_key(|&edge| edge)
             .unwrap()
     }
 
-    fn card_overlap(&self, src: &Self, card: Card) -> f64 {
+    fn card_overlap(&self, src: &Self, card: Card) -> N64 {
         src.edge(card) + self.edge(card.flip())
     }
 
@@ -334,7 +334,7 @@ impl PlacedBounds for PlacedShape {
     }
 }
 
-fn interval_sector(left: f64, right: f64, val: f64) -> Ordering {
+fn interval_sector(left: N64, right: N64, val: N64) -> Ordering {
     if val < left {
         Ordering::Less
     } else if val > right {

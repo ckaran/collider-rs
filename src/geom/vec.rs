@@ -21,20 +21,20 @@ extern crate serde;
 #[cfg(feature = "use_serde")]
 use self::serde::*;
 
-/// A 2-D Cartesian vector using finite `f64` values.
+/// A 2-D Cartesian vector using finite `N64` values.
 #[derive(PartialEq, Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct Vec2 {
     /// The x-coordinate.
-    pub x: f64,
+    pub x: N64,
     /// The y-coordinate.
-    pub y: f64,
+    pub y: N64,
 }
 
 impl Vec2 {
     /// Constructs a vector with the given `x` and `y` coordinates.
     #[inline]
-    pub fn new(x: f64, y: f64) -> Vec2 {
+    pub fn new(x: N64, y: N64) -> Vec2 {
         Vec2 { x, y }
     }
 
@@ -48,7 +48,7 @@ impl Vec2 {
     ///
     /// Due to underflow, this might be `0.0` even if `x` and `y` are non-zero
     /// but very small.
-    pub fn len_sq(&self) -> f64 {
+    pub fn len_sq(&self) -> N64 {
         self.x * self.x + self.y * self.y
     }
 
@@ -56,7 +56,7 @@ impl Vec2 {
     ///
     /// Due to underflow, this might be `0.0` even if `x` and `y` are non-zero
     /// but very small.
-    pub fn len(&self) -> f64 {
+    pub fn len(&self) -> N64 {
         self.len_sq().sqrt()
     }
 
@@ -64,7 +64,7 @@ impl Vec2 {
     /// (approximately) `1.0`, or `None` if `self.len() == 0.0`.
     pub fn normalize(&self) -> Option<Vec2> {
         let len = self.len();
-        if len == 0.0 {
+        if len == n64(0.0) {
             None
         } else {
             Some(Vec2::new(self.x / len, self.y / len))
@@ -73,12 +73,12 @@ impl Vec2 {
     }
 
     /// Computes the square of the Euclidean distance between two vectors.
-    pub fn dist_sq(&self, other: &Vec2) -> f64 {
+    pub fn dist_sq(&self, other: &Vec2) -> N64 {
         (*self - *other).len_sq()
     }
 
     /// Computes the Euclidean distance between two vectors.
-    pub fn dist(&self, other: &Vec2) -> f64 {
+    pub fn dist(&self, other: &Vec2) -> N64 {
         (*self - *other).len()
     }
 
@@ -87,43 +87,43 @@ impl Vec2 {
     /// Using `ratio = 0.0` will return `self`, and using `ratio = 1.0` will
     /// return `other`. Can also extrapolate using `ratio > 1.0` or
     /// `ratio < 0.0`.
-    pub fn lerp(&self, other: Vec2, ratio: f64) -> Vec2 {
-        (1.0 - ratio) * *self + ratio * other
+    pub fn lerp(&self, other: Vec2, ratio: N64) -> Vec2 {
+        (n64(1.0) - ratio) * *self + ratio * other
     }
 
     /// Rotates the vector by `angle` radians counter-clockwise (assuming +x is
     /// right and +y is up).
-    pub fn rotate(&self, angle: f64) -> Vec2 {
+    pub fn rotate(&self, angle: N64) -> Vec2 {
         let sin = angle.sin();
         let cos = angle.cos();
         Vec2::new(cos * self.x - sin * self.y, sin * self.x + cos * self.y)
     }
 }
 
-impl Mul<Vec2> for f64 {
+impl Mul<Vec2> for N64 {
     type Output = Vec2;
     fn mul(self, rhs: Vec2) -> Vec2 {
         Vec2::new(self * rhs.x, self * rhs.y)
     }
 }
 
-impl Mul<f64> for Vec2 {
+impl Mul<N64> for Vec2 {
     type Output = Vec2;
-    fn mul(self, rhs: f64) -> Vec2 {
+    fn mul(self, rhs: N64) -> Vec2 {
         Vec2::new(self.x * rhs, self.y * rhs)
     }
 }
 
-impl MulAssign<f64> for Vec2 {
-    fn mul_assign(&mut self, rhs: f64) {
+impl MulAssign<N64> for Vec2 {
+    fn mul_assign(&mut self, rhs: N64) {
         self.x *= rhs;
         self.y *= rhs;
     }
 }
 
 impl Mul<Vec2> for Vec2 {
-    type Output = f64;
-    fn mul(self, rhs: Vec2) -> f64 {
+    type Output = N64;
+    fn mul(self, rhs: Vec2) -> N64 {
         self.x * rhs.x + self.y * rhs.y
     }
 }
@@ -166,17 +166,17 @@ impl Neg for Vec2 {
 impl From<Card> for Vec2 {
     fn from(card: Card) -> Vec2 {
         match card {
-            Card::MinusX => v2(-1.0, 0.0),
-            Card::MinusY => v2(0.0, -1.0),
-            Card::PlusX => v2(1.0, 0.0),
-            Card::PlusY => v2(0.0, 1.0),
+            Card::MinusX => v2(n64(-1.0), n64(0.0)),
+            Card::MinusY => v2(n64(0.0), n64(-1.0)),
+            Card::PlusX => v2(n64(1.0), n64(0.0)),
+            Card::PlusY => v2(n64(0.0), n64(1.0)),
         }
     }
 }
 
 /// Shorthand for invoking the `Vec2` constructor.
 #[inline]
-pub fn v2(x: f64, y: f64) -> Vec2 {
+pub fn v2(x: N64, y: N64) -> Vec2 {
     Vec2::new(x, y)
 }
 
@@ -191,14 +191,14 @@ pub fn v2(x: f64, y: f64) -> Vec2 {
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct DirVec2 {
     dir: Vec2,
-    len: f64,
+    len: N64,
 }
 
 impl DirVec2 {
     /// Constructs a vector with the given direction `dir` and length `len`.
     ///
     /// `dir` is normalized before being set.
-    pub fn new(dir: Vec2, len: f64) -> DirVec2 {
+    pub fn new(dir: Vec2, len: N64) -> DirVec2 {
         DirVec2 {
             dir: dir.normalize().unwrap(),
             len,
@@ -213,7 +213,7 @@ impl DirVec2 {
 
     /// Returns the length of the vector.  May be positive or negative.
     #[inline]
-    pub fn len(&self) -> f64 {
+    pub fn len(&self) -> N64 {
         self.len
     }
 

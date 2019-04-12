@@ -33,12 +33,12 @@ const PAIR_BASE: u64 = 0x8000_0000_0000_0000;
 #[derive(Copy, Clone)]
 #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
 pub struct EventKey {
-    time: f64,
+    time: N64,
     index: u64,
 }
 
 impl EventKey {
-    fn time(&self) -> f64 {
+    fn time(&self) -> N64 {
         self.time
     }
 }
@@ -68,7 +68,7 @@ impl Ord for EventKey {
         if self.time == other.time {
             self.index.cmp(&other.index)
         } else {
-            n64(self.time).cmp(&n64(other.time))
+            self.time.cmp(&other.time)
         }
     }
 }
@@ -122,7 +122,7 @@ impl EventManager {
 
     pub fn add_solitaire_event(
         &mut self,
-        time: f64,
+        time: N64,
         event: InternalEvent,
         key_set: &mut TightSet<EventKey>,
     ) {
@@ -134,7 +134,7 @@ impl EventManager {
 
     pub fn add_pair_event(
         &mut self,
-        time: f64,
+        time: N64,
         event: InternalEvent,
         first_key_set: &mut TightSet<EventKey>,
         second_key_set: &mut TightSet<EventKey>,
@@ -161,8 +161,8 @@ impl EventManager {
         key_set.clear();
     }
 
-    fn new_event_key(&mut self, time: f64, for_pair: bool) -> Option<EventKey> {
-        if time >= HIGH_TIME {
+    fn new_event_key(&mut self, time: N64, for_pair: bool) -> Option<EventKey> {
+        if time >= n64(HIGH_TIME) {
             None
         } else {
             let mut index = self.next_event_index;
@@ -176,11 +176,11 @@ impl EventManager {
         }
     }
 
-    pub fn peek_time(&self) -> f64 {
-        self.peek_key().map_or(f64::INFINITY, |key| key.time())
+    pub fn peek_time(&self) -> N64 {
+        self.peek_key().map_or(n64(f64::INFINITY), |key| key.time())
     }
 
-    pub fn next<M: EventKeysMap>(&mut self, time: f64, map: &mut M) -> Option<InternalEvent> {
+    pub fn next<M: EventKeysMap>(&mut self, time: N64, map: &mut M) -> Option<InternalEvent> {
         if let Some(key) = self.peek_key() {
             if key.time() == time {
                 let event = self.events.remove(&key).unwrap();

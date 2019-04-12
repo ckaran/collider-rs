@@ -24,7 +24,7 @@ pub fn rect_rect_normal(dst: &PlacedShape, src: &PlacedShape) -> DirVec2 {
         .iter()
         .cloned()
         .map(|card| (card, dst.card_overlap(src, card)))
-        .min_by_key(|&(_, overlap)| n64(overlap))
+        .min_by_key(|&(_, overlap)| overlap)
         .unwrap();
     DirVec2::new(card.into(), overlap)
 }
@@ -32,17 +32,17 @@ pub fn rect_rect_normal(dst: &PlacedShape, src: &PlacedShape) -> DirVec2 {
 pub fn circle_circle_normal(dst: &PlacedShape, src: &PlacedShape) -> DirVec2 {
     let mut dir = dst.pos - src.pos;
     let dist = dir.len();
-    if dist == 0.0 {
-        dir = v2(1.0, 0.0);
+    if dist == n64(0.0) {
+        dir = v2(n64(1.0), n64(0.0));
     }
-    DirVec2::new(dir, (src.dims().x + dst.dims().x) * 0.5 - dist)
+    DirVec2::new(dir, (src.dims().x + dst.dims().x) * n64(0.5) - dist)
 }
 
 pub fn rect_circle_normal(dst: &PlacedShape, src: &PlacedShape) -> DirVec2 {
     let sector = dst.sector(src.pos);
     if sector.is_corner() {
         circle_circle_normal(
-            &PlacedShape::new(dst.corner(sector), Shape::circle(0.0)),
+            &PlacedShape::new(dst.corner(sector), Shape::circle(n64(0.0))),
             src,
         )
     } else {
@@ -56,7 +56,7 @@ pub fn masked_rect_rect_normal(dst: &PlacedShape, src: &PlacedShape, mask: CardM
         .cloned()
         .filter(|&card| mask[card])
         .map(|card| (card, dst.card_overlap(src, card)))
-        .min_by_key(|&(_, overlap)| n64(overlap))
+        .min_by_key(|&(_, overlap)| overlap)
         .unwrap_or_else(|| panic!("CardMask must be non-empty"));
     DirVec2::new(card.into(), overlap)
 }
@@ -77,7 +77,7 @@ pub fn masked_rect_circle_normal(dst: &PlacedShape, src: &PlacedShape, mask: Car
     let sector = dst.sector(src.pos);
     if mask_has_corner_sector(sector, mask.flip()) {
         circle_circle_normal(
-            &PlacedShape::new(dst.corner(sector), Shape::circle(0.0)),
+            &PlacedShape::new(dst.corner(sector), Shape::circle(n64(0.0))),
             src,
         )
     } else {
@@ -95,7 +95,7 @@ fn mask_has_corner_sector(sector: Sector, mask: CardMask) -> bool {
 
 pub fn circle_any_contact(a: &PlacedShape, b: &PlacedShape) -> Vec2 {
     let normal = a.normal_from(b);
-    a.pos + normal.dir() * (normal.len() - a.shape.dims().x) * 0.5
+    a.pos + normal.dir() * (normal.len() - a.shape.dims().x) * n64(0.5)
 }
 
 pub fn rect_rect_contact(a: &PlacedShape, b: &PlacedShape) -> Vec2 {
@@ -105,6 +105,6 @@ pub fn rect_rect_contact(a: &PlacedShape, b: &PlacedShape) -> Vec2 {
     )
 }
 
-fn rect_rect_contact_1d(a_min: f64, a_max: f64, b_min: f64, b_max: f64) -> f64 {
-    0.5 * (a_min.max(b_min) + b_max.min(a_max))
+fn rect_rect_contact_1d(a_min: N64, a_max: N64, b_min: N64, b_max: N64) -> N64 {
+    n64(0.5) * (a_min.max(b_min) + b_max.min(a_max))
 }

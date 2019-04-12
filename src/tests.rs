@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use noisy_float::prelude::*;
+
 #[cfg(feature = "use_serde")]
 extern crate serde;
 #[cfg(feature = "use_serde")]

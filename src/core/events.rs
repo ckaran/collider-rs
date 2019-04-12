@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use noisy_float::prelude::*;
 use crate::core::{HbId, HIGH_TIME};
-use crate::float::n64;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::f64;

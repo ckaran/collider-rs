@@ -88,7 +88,6 @@
 extern crate fnv;
 
 mod core;
-mod float;
 pub mod geom;
 mod index_rect;
 #[cfg(test)]

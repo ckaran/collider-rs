@@ -17,11 +17,11 @@ extern crate serde;
 #[cfg(feature = "use_serde")]
 use self::serde::*;
 
+use noisy_float::prelude::*;
 use fnv::FnvHashSet;
 use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
 use std::hash::Hash;
-
 pub use self::one_or_two::OneOrTwo;
 
 // returns the ascending root of a quadratic polynomial ax^2 + bx + c

@@ -14,6 +14,7 @@
 
 mod solvers;
 
+use noisy_float::prelude::*;
 use crate::core;
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;

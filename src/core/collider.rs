@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use noisy_float::prelude::*;
 use crate::core::dur_hitbox::DurHitbox;
 use crate::core::events::{EventKey, EventKeysMap, EventManager, InternalEvent};
 use crate::core::grid::Grid;

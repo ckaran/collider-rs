@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::float::n64;
+use noisy_float::prelude::*;
 use crate::geom::shape::{PlacedBounds, Sector};
 use crate::geom::*;
 

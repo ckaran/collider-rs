@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use noisy_float::prelude::*;
 use std::cmp::Ordering;
 use crate::core::{HbVel, Hitbox};
-use crate::float::n64;
 use crate::geom::{v2, Card, CardMask, DirVec2, Vec2};
 
 mod normals;

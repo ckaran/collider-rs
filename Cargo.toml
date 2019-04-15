@@ -18,7 +18,7 @@ default = []
 # If you use this feature, then the internal state of the collider can be
 # serialized and deserialized via serde.  In most cases this isn't needed, but
 # should you need it, you will **really need it**.
-use_serde = ["serde", "serde_json", "noisy_float/serde-1"]
+use_serde = ["serde", "ron", "noisy_float/serde-1"]
 
 [dependencies]
 fnv = "^1.0.3"
@@ -29,4 +29,4 @@ noisy_float = {version = "0.1.9"}
 # of the collider and reload it at some other point in the future, this will be
 # extremely useful.
 serde = {version = "1.0.90", features = ["derive", "rc", "std"], optional = true}
-serde_json = {version = "1.0.39", optional = true}
+ron = {version = "0.5.1", optional = true}

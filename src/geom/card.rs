@@ -126,41 +126,47 @@ impl Debug for CardMask {
 #[cfg(all(test, feature = "use_serde"))]
 pub(crate) mod test_serde {
     use super::*;
-    use serde_json;
+    use ron::ser;
+    use ron::de;
+    use std::default::Default;
 
     #[test]
     fn test_card() {
+        let pretty: ser::PrettyConfig = Default::default();
+
         let dut = Card::MinusX;
-        let serialized = serde_json::to_string(&dut).unwrap();
-        let dut2: Card = serde_json::from_str(&serialized).unwrap();
+        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
+        let dut2: Card = de::from_str(&serialized).unwrap();
         assert_eq!(dut, dut2);
 
         let dut = Card::MinusY;
-        let serialized = serde_json::to_string(&dut).unwrap();
-        let dut2: Card = serde_json::from_str(&serialized).unwrap();
+        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
+        let dut2: Card = de::from_str(&serialized).unwrap();
         assert_eq!(dut, dut2);
 
         let dut = Card::PlusX;
-        let serialized = serde_json::to_string(&dut).unwrap();
-        let dut2: Card = serde_json::from_str(&serialized).unwrap();
+        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
+        let dut2: Card = de::from_str(&serialized).unwrap();
         assert_eq!(dut, dut2);
 
         let dut = Card::PlusY;
-        let serialized = serde_json::to_string(&dut).unwrap();
-        let dut2: Card = serde_json::from_str(&serialized).unwrap();
+        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
+        let dut2: Card = de::from_str(&serialized).unwrap();
         assert_eq!(dut, dut2);
     }
 
     #[test]
     fn test_card_mask() {
+        let pretty: ser::PrettyConfig = Default::default();
+
         let choices = vec!(true, false);
         for i in choices.iter() {
             for j in choices.iter() {
                 for k in choices.iter() {
                     for l in choices.iter() {
                         let dut = CardMask{flags: [*i, *j, *k, *l]};
-                        let serialized = serde_json::to_string(&dut).unwrap();
-                        let dut2: CardMask = serde_json::from_str(&serialized).unwrap();
+                        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
+                        let dut2: CardMask = de::from_str(&serialized).unwrap();
                         assert_eq!(dut, dut2);
                     }
                 }

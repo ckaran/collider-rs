@@ -24,9 +24,9 @@ use self::dur_hitbox::{DurHbVel, DurHitbox};
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 const HIGH_TIME: f64 = 1e50;
@@ -36,7 +36,7 @@ pub type HbId = u64;
 
 /// Velocity information describing how a hitbox shape is changing over time.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct HbVel {
     /// The movement velocity of the hitbox.
     pub value: Vec2,
@@ -122,7 +122,7 @@ impl PlacedBounds for HbVel {
 
 /// Represents a moving shape for continuous collision testing.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Hitbox {
     /// The placed shape at the given point in time.
     ///

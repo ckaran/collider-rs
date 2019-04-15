@@ -16,14 +16,14 @@ use noisy_float::prelude::*;
 use crate::geom::card::Card;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 /// A 2-D Cartesian vector using finite `N64` values.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Default, Hash)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Vec2 {
     /// The x-coordinate.
     pub x: N64,
@@ -188,7 +188,7 @@ pub fn v2(x: N64, y: N64) -> Vec2 {
 /// length. Such distinctions are necessary when describing the normal distance
 /// between `PlacedShape`s.
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct DirVec2 {
     dir: Vec2,
     len: N64,

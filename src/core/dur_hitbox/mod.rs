@@ -20,9 +20,9 @@ use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
 use std::f64;
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 // DurHitbox (and DurHbVel) is almost identical to Hitbox (and HbVel), except
@@ -31,7 +31,7 @@ use self::serde::*;
 // new struct is meant to make that distinction clear.
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct DurHbVel {
     pub value: Vec2,
     pub resize: Vec2,
@@ -70,7 +70,7 @@ impl PlacedBounds for DurHbVel {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct DurHitbox {
     pub value: PlacedShape,
     pub vel: DurHbVel,

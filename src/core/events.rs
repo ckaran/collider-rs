@@ -20,9 +20,9 @@ use std::f64;
 use std::hash::{Hash, Hasher};
 use crate::util::{OneOrTwo, TightSet};
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 // This module contains Collider events that are queued to occur at given
@@ -31,7 +31,7 @@ use self::serde::*;
 const PAIR_BASE: u64 = 0x8000_0000_0000_0000;
 
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct EventKey {
     time: N64,
     index: u64,
@@ -78,7 +78,7 @@ pub trait EventKeysMap {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub enum InternalEvent {
     #[cfg(debug_assertions)]
     PanicSmallHitbox(HbId),
@@ -107,7 +107,7 @@ impl InternalEvent {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct EventManager {
     events: BTreeMap<EventKey, InternalEvent>,
     next_event_index: u64,

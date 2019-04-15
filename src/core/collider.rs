@@ -22,9 +22,9 @@ use crate::geom::PlacedShape;
 use std::mem;
 use crate::util::TightSet;
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 // TODO check that floating point values are within a good range when adding/updating hitboxes
@@ -34,7 +34,7 @@ use self::serde::*;
 /// Collider manages events using a "simulation time" that the user updates as
 /// necessary. This time starts at `0.0`.
 #[derive(Debug, PartialEq, Eq, Clone)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Collider<P: HbProfile> {
     hitboxes: FnvHashMap<HbId, HitboxInfo<P>>,
     time: N64,
@@ -455,7 +455,7 @@ impl<P: HbProfile> EventKeysMap for FnvHashMap<HbId, HitboxInfo<P>> {
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 struct HitboxInfo<P: HbProfile> {
     profile: P,
     hitbox: Hitbox,
@@ -501,7 +501,7 @@ impl<P: HbProfile> HitboxInfo<P> {
 
 /// A hitbox event type that may be returned from a `Collider` instance.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub enum HbEvent {
     /// Occurs when two hitboxes collide
     Collide,

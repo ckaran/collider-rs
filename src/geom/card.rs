@@ -15,14 +15,14 @@
 use std::fmt::{self, Debug, Formatter};
 use std::ops::{Index, IndexMut};
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 /// Represents the four cardinal directions in 2D space.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub enum Card {
     /// Negative X direction.
     MinusX,
@@ -58,7 +58,7 @@ impl Card {
 /// A map from `Card` to `bool`, typically used to specify allowed normal vector
 /// directions.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct CardMask {
     flags: [bool; 4],
 }
@@ -123,7 +123,7 @@ impl Debug for CardMask {
     }
 }
 
-#[cfg(all(test, feature = "use_serde"))]
+#[cfg(all(test, feature = "enable_serde"))]
 pub(crate) mod test_serde {
     use super::*;
     use ron::ser;

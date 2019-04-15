@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 use noisy_float::prelude::*;
@@ -40,7 +40,7 @@ const MIN_TIGHT_SET_CAPACITY: usize = 4;
 
 // a HashSet that will automatically shrink down in capacity to save space
 #[derive(PartialEq, Eq, Clone, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct TightSet<T: Hash + Eq> {
     set: FnvHashSet<T>,
 }
@@ -103,11 +103,11 @@ impl<T: Hash + Eq> TightSet<T> {
 
 // a sequence of size 1 or 2 that may be iterated over and is not heap-allocated
 mod one_or_two {
-    #[cfg(feature = "use_serde")]
+    #[cfg(feature = "enable_serde")]
     use super::*;
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-    #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
     pub enum OneOrTwo<T: Copy + Eq> {
         One(T),
         Two(T, T),
@@ -131,7 +131,7 @@ mod one_or_two {
     }
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-    #[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
     pub struct Iter<T: Copy + Eq> {
         one_or_two: OneOrTwo<T>,
         index: u8,

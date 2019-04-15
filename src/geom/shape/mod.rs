@@ -21,14 +21,14 @@ mod normals;
 #[cfg(test)]
 mod tests;
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 /// Enumeration of kinds of shapes used by Collider.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub enum ShapeKind {
     /// Circle.  Requires width and height to match.
     Circle,
@@ -40,7 +40,7 @@ pub enum ShapeKind {
 ///
 /// Each shape has a `width` and `height`, which are allowed to be negative.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Shape {
     kind: ShapeKind,
     dims: Vec2,
@@ -109,7 +109,7 @@ impl Shape {
 
 /// Represents a shape with a position.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct PlacedShape {
     /// The position of the center of the shape.
     pub pos: Vec2,
@@ -345,7 +345,7 @@ fn interval_sector(left: N64, right: N64, val: N64) -> Ordering {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "Ordering")]
 enum OrderingDefForSerde {
@@ -355,11 +355,11 @@ enum OrderingDefForSerde {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub(crate) struct Sector {
-    #[cfg_attr(feature = "use_serde", serde(with = "OrderingDefForSerde"))]
+    #[cfg_attr(feature = "enable_serde", serde(with = "OrderingDefForSerde"))]
     x: Ordering,
-    #[cfg_attr(feature = "use_serde", serde(with = "OrderingDefForSerde"))]
+    #[cfg_attr(feature = "enable_serde", serde(with = "OrderingDefForSerde"))]
     y: Ordering,
 }
 

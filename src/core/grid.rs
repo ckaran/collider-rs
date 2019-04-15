@@ -23,9 +23,9 @@ use std::collections::hash_map;
 use std::f64;
 use crate::util::TightSet;
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 // Grid is a sparse 2D grid implemented as a HashMap. This is used as the
@@ -34,14 +34,14 @@ use self::serde::*;
 //TODO add unit tests for Grid
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 struct GridKey {
     coord: (i32, i32),
     group: HbGroup,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 struct GridArea {
     rect: IndexRect,
     group: HbGroup,
@@ -54,7 +54,7 @@ impl GridArea {
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Grid {
     map: FnvHashMap<GridKey, TightSet<HbId>>,
     cell_width: N64,

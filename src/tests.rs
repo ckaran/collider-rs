@@ -14,9 +14,9 @@
 
 use noisy_float::prelude::*;
 
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 extern crate serde;
-#[cfg(feature = "use_serde")]
+#[cfg(feature = "enable_serde")]
 use self::serde::*;
 
 use super::{Collider, HbEvent, HbId, HbProfile, HbVel};
@@ -24,7 +24,7 @@ use crate::geom::{v2, Shape};
 use std::f64;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-#[cfg_attr(feature = "use_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 struct TestHbProfile {
     id: HbId,
 }
@@ -289,7 +289,7 @@ fn test_separate_initial_overlap() {
     advance(&mut collider, n64(1.5));
 }
 
-#[cfg(all(test, feature = "use_serde"))]
+#[cfg(all(test, feature = "enable_serde"))]
 pub(crate) mod test_serde {
     use super::*;
     use ron::ser;

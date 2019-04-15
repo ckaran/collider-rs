@@ -356,22 +356,22 @@ pub(crate) mod test_serde {
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-//        let mut hitbox = Shape::circle(n64(2.0)).place(v2(n64(10.0), n64(0.0))).still();
-//        hitbox.vel.value = v2(n64(-1.0), n64(0.0));
-//        let overlaps = collider.add_hitbox(1.into(), hitbox);
-//        assert_eq!(overlaps, vec![]);
-//
-//        advance_to_event(&mut collider, n64(9.0));
-//        assert_eq!(
-//            collider.next(),
-//            Some((HbEvent::Collide, 0.into(), 1.into()))
-//        );
-//        advance_to_event(&mut collider, n64(11.125));
-//        assert_eq!(
-//            collider.next(),
-//            Some((HbEvent::Separate, 0.into(), 1.into()))
-//        );
-//        advance(&mut collider, n64(23.0));
+        let mut hitbox = Shape::circle(n64(2.0)).place(v2(n64(10.0), n64(0.0))).still();
+        hitbox.vel.value = v2(n64(-1.0), n64(0.0));
+        let overlaps = collider.add_hitbox(1.into(), hitbox);
+        assert_eq!(overlaps, vec![]);
+
+        advance_to_event(&mut collider, n64(9.0));
+        assert_eq!(
+            collider.next(),
+            Some((HbEvent::Collide, 0.into(), 1.into()))
+        );
+        advance_to_event(&mut collider, n64(11.125));
+        assert_eq!(
+            collider.next(),
+            Some((HbEvent::Separate, 0.into(), 1.into()))
+        );
+        advance(&mut collider, n64(23.0));
 
         let pretty: ser::PrettyConfig = Default::default();
         let serialized = ser::to_string_pretty(&collider, pretty).unwrap();

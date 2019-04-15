@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
 use crate::core::dur_hitbox::DurHitbox;
 use crate::core::events::{EventKey, EventKeysMap, EventManager, InternalEvent};
 use crate::core::grid::Grid;
 use crate::core::{HbGroup, HbId, HbProfile, HbVel, Hitbox, HIGH_TIME};
-use fnv::FnvHashMap;
 use crate::geom::PlacedShape;
-use std::mem;
 use crate::util::TightSet;
+use fnv::FnvHashMap;
+use noisy_float::prelude::*;
+use std::mem;
 
 #[cfg(feature = "enable_serde")]
 extern crate serde;
@@ -105,7 +105,11 @@ impl<P: HbProfile> Collider<P> {
     pub fn set_time(&mut self, time: N64) {
         assert!(time >= self.time, "cannot rewind time");
         assert!(time <= self.next_time(), "time must not exceed next_time()");
-        assert!(time < n64(HIGH_TIME), "time must not exceed {}", n64(HIGH_TIME));
+        assert!(
+            time < n64(HIGH_TIME),
+            "time must not exceed {}",
+            n64(HIGH_TIME)
+        );
         self.time = time;
     }
 

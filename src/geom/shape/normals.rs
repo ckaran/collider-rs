@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
 use crate::geom::shape::{PlacedBounds, Sector};
 use crate::geom::*;
+use noisy_float::prelude::*;
 
 // This module contains methods to solve for the normal vector
 // between two PlacedShapes.

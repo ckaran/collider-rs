@@ -17,12 +17,12 @@ extern crate serde;
 #[cfg(feature = "enable_serde")]
 use self::serde::*;
 
-use noisy_float::prelude::*;
+pub use self::one_or_two::OneOrTwo;
 use fnv::FnvHashSet;
+use noisy_float::prelude::*;
 use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
 use std::hash::Hash;
-pub use self::one_or_two::OneOrTwo;
 
 // returns the ascending root of a quadratic polynomial ax^2 + bx + c
 pub fn quad_root_ascending(a: N64, b: N64, c: N64) -> Option<N64> {
@@ -160,10 +160,21 @@ mod tests {
 
     #[test]
     fn test_quad_root_ascending() {
-        assert!((quad_root_ascending(n64(1e-14), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs() < n64(1e-7));
-        assert!((quad_root_ascending(n64(0.0), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs() < n64(1e-7));
-        assert!((quad_root_ascending(n64(100.0), n64(-1.0), n64(-1e-16)).unwrap() - n64(0.01)).abs() < n64(1e-7));
-        assert!(quad_root_ascending(n64(0.0), n64(-2.0), n64(1.0)).unwrap().is_infinite());
+        assert!(
+            (quad_root_ascending(n64(1e-14), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs()
+                < n64(1e-7)
+        );
+        assert!(
+            (quad_root_ascending(n64(0.0), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs()
+                < n64(1e-7)
+        );
+        assert!(
+            (quad_root_ascending(n64(100.0), n64(-1.0), n64(-1e-16)).unwrap() - n64(0.01)).abs()
+                < n64(1e-7)
+        );
+        assert!(quad_root_ascending(n64(0.0), n64(-2.0), n64(1.0))
+            .unwrap()
+            .is_infinite());
         assert!(quad_root_ascending(n64(-3.0), n64(0.0), n64(-1.0)).is_none());
         assert!(quad_root_ascending(n64(1.0), n64(1.0), n64(1.0)).is_none());
     }

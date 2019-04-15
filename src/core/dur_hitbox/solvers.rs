@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
 use crate::core;
 use crate::core::dur_hitbox::DurHitbox;
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
-use std::f64;
 use crate::util;
+use noisy_float::prelude::*;
+use std::f64;
 
 // This module contains methods to solve for the collision/separation time
 // of two hitboxes.
@@ -40,7 +40,10 @@ pub fn separate_time(a: &DurHitbox, b: &DurHitbox, padding: N64) -> N64 {
         _ => (a, b),
     };
     let mut a = a.clone();
-    a.value.shape = Shape::new(a.value.kind(), a.value.dims() + v2(padding, padding) * n64(2.0));
+    a.value.shape = Shape::new(
+        a.value.kind(),
+        a.value.dims() + v2(padding, padding) * n64(2.0),
+    );
     time_unpadded(&a, b, false, a.vel.duration.min(b.vel.duration))
 }
 
@@ -76,7 +79,11 @@ fn rect_rect_time(a: &DurHitbox, b: &DurHitbox, for_collide: bool) -> N64 {
             overlap_end = overlap_end.min(-overlap / overlap_vel);
         }
         if overlap_start >= overlap_end {
-            return if for_collide { n64(f64::INFINITY) } else { n64(0.0) };
+            return if for_collide {
+                n64(f64::INFINITY)
+            } else {
+                n64(0.0)
+            };
         }
     }
     if for_collide {

@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
 use crate::core::dur_hitbox::DurHitbox;
 use crate::core::{HbGroup, HbId, Hitbox};
-use fnv::{FnvHashMap, FnvHashSet};
 use crate::geom::shape::{PlacedBounds, PlacedShape};
 use crate::index_rect::IndexRect;
+use crate::util::TightSet;
+use fnv::{FnvHashMap, FnvHashSet};
+use noisy_float::prelude::*;
 use std::cmp;
 use std::collections::hash_map;
 use std::f64;
-use crate::util::TightSet;
 
 #[cfg(feature = "enable_serde")]
 extern crate serde;

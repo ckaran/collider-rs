@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
 use crate::core::{HbId, HIGH_TIME};
+use crate::util::{OneOrTwo, TightSet};
+use noisy_float::prelude::*;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::f64;
 use std::hash::{Hash, Hasher};
-use crate::util::{OneOrTwo, TightSet};
 
 #[cfg(feature = "enable_serde")]
 extern crate serde;

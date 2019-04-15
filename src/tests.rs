@@ -76,12 +76,16 @@ fn sort(mut vector: Vec<TestHbProfile>) -> Vec<TestHbProfile> {
 fn smoke_test() {
     let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
 
-    let mut hitbox = Shape::square(n64(2.0)).place(v2(n64(-10.0), n64(0.0))).still();
+    let mut hitbox = Shape::square(n64(2.0))
+        .place(v2(n64(-10.0), n64(0.0)))
+        .still();
     hitbox.vel.value = v2(n64(1.0), n64(0.0));
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    let mut hitbox = Shape::circle(n64(2.0)).place(v2(n64(10.0), n64(0.0))).still();
+    let mut hitbox = Shape::circle(n64(2.0))
+        .place(v2(n64(10.0), n64(0.0)))
+        .still();
     hitbox.vel.value = v2(n64(-1.0), n64(0.0));
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert_eq!(overlaps, vec![]);
@@ -103,12 +107,16 @@ fn smoke_test() {
 fn test_hitbox_updates() {
     let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
 
-    let mut hitbox = Shape::square(n64(2.0)).place(v2(n64(-10.0), n64(0.0))).still();
+    let mut hitbox = Shape::square(n64(2.0))
+        .place(v2(n64(-10.0), n64(0.0)))
+        .still();
     hitbox.vel.value = v2(n64(1.0), n64(0.0));
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert!(overlaps.is_empty());
 
-    let mut hitbox = Shape::circle(n64(2.0)).place(v2(n64(10.0), n64(0.0))).still();
+    let mut hitbox = Shape::circle(n64(2.0))
+        .place(v2(n64(10.0), n64(0.0)))
+        .still();
     hitbox.vel.value = v2(n64(1.0), n64(0.0));
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert!(overlaps.is_empty());
@@ -116,7 +124,10 @@ fn test_hitbox_updates() {
     advance(&mut collider, n64(11.0));
 
     let mut hitbox = collider.get_hitbox(0);
-    assert_eq!(hitbox.value, Shape::square(n64(2.0)).place(v2(n64(1.0), n64(0.0))));
+    assert_eq!(
+        hitbox.value,
+        Shape::square(n64(2.0)).place(v2(n64(1.0), n64(0.0)))
+    );
     assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
     assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
     assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
@@ -130,7 +141,10 @@ fn test_hitbox_updates() {
     advance(&mut collider, n64(14.0));
 
     let mut hitbox = collider.get_hitbox(1);
-    assert_eq!(hitbox.value, Shape::circle(n64(2.0)).place(v2(n64(24.0), n64(0.0))));
+    assert_eq!(
+        hitbox.value,
+        Shape::circle(n64(2.0)).place(v2(n64(24.0), n64(0.0)))
+    );
     assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
     assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
     assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
@@ -148,7 +162,10 @@ fn test_hitbox_updates() {
         Some((HbEvent::Collide, 0.into(), 1.into()))
     );
     let mut hitbox = collider.get_hitbox(0);
-    assert_eq!(hitbox.value, Shape::square(n64(2.0)).place(v2(n64(0.0), n64(-6.0))));
+    assert_eq!(
+        hitbox.value,
+        Shape::square(n64(2.0)).place(v2(n64(0.0), n64(-6.0)))
+    );
     assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(-1.0)));
     assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
     assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
@@ -156,14 +173,19 @@ fn test_hitbox_updates() {
     collider.set_hitbox_vel(0, hitbox.vel);
 
     let mut hitbox = collider.get_hitbox(1);
-    assert_eq!(hitbox.value, Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(-8.0))));
+    assert_eq!(
+        hitbox.value,
+        Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(-8.0)))
+    );
     assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(0.0)));
     assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
     assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
     hitbox.vel.value = v2(n64(0.0), n64(2.0));
     collider.set_hitbox_vel(1, hitbox.vel);
 
-    let hitbox = Shape::rect(v2(n64(2.0), n64(20.0))).place(v2(n64(0.0), n64(0.0))).still();
+    let hitbox = Shape::rect(v2(n64(2.0), n64(20.0)))
+        .place(v2(n64(0.0), n64(0.0)))
+        .still();
     assert_eq!(
         sort(collider.add_hitbox(2.into(), hitbox)),
         vec![0.into(), 1.into()]
@@ -200,7 +222,12 @@ fn test_get_overlaps() {
             .place(v2(n64(10.0), n64(0.0)))
             .moving(v2(n64(-1.0), n64(0.0))),
     );
-    collider.add_hitbox(2.into(), Shape::square(n64(2.0)).place(v2(n64(0.0), n64(0.0))).still());
+    collider.add_hitbox(
+        2.into(),
+        Shape::square(n64(2.0))
+            .place(v2(n64(0.0), n64(0.0)))
+            .still(),
+    );
 
     assert_eq!(collider.get_overlaps(0), vec![]);
     assert_eq!(collider.get_overlaps(1), vec![]);
@@ -245,9 +272,16 @@ fn test_query_overlaps() {
 
     collider.add_hitbox(
         0.into(),
-        Shape::square(n64(2.0)).place(v2(n64(-5.0), n64(0.0))).moving(v2(n64(1.0), n64(0.0))),
+        Shape::square(n64(2.0))
+            .place(v2(n64(-5.0), n64(0.0)))
+            .moving(v2(n64(1.0), n64(0.0))),
     );
-    collider.add_hitbox(1.into(), Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(0.0))).still());
+    collider.add_hitbox(
+        1.into(),
+        Shape::circle(n64(2.0))
+            .place(v2(n64(0.0), n64(0.0)))
+            .still(),
+    );
     collider.add_hitbox(
         2.into(),
         Shape::circle(n64(2.0))
@@ -274,10 +308,15 @@ fn test_separate_initial_overlap() {
 
     let overlaps = collider.add_hitbox(
         0.into(),
-        Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).moving(v2(n64(0.0), n64(1.))),
+        Shape::square(n64(1.))
+            .place(v2(n64(0.), n64(0.)))
+            .moving(v2(n64(0.0), n64(1.))),
     );
     assert_eq!(overlaps, vec![]);
-    let overlaps = collider.add_hitbox(1.into(), Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).still());
+    let overlaps = collider.add_hitbox(
+        1.into(),
+        Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).still(),
+    );
     assert_eq!(overlaps, vec![0.into()]);
 
     advance_to_event(&mut collider, n64(1.25));
@@ -292,8 +331,8 @@ fn test_separate_initial_overlap() {
 #[cfg(all(test, feature = "enable_serde"))]
 pub(crate) mod test_serde {
     use super::*;
-    use ron::ser;
     use ron::de;
+    use ron::ser;
     use std::default::Default;
 
     #[test]
@@ -310,7 +349,9 @@ pub(crate) mod test_serde {
     fn smoke_test() {
         let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
 
-        let mut hitbox = Shape::square(n64(2.0)).place(v2(n64(-10.0), n64(0.0))).still();
+        let mut hitbox = Shape::square(n64(2.0))
+            .place(v2(n64(-10.0), n64(0.0)))
+            .still();
         hitbox.vel.value = v2(n64(1.0), n64(0.0));
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert_eq!(overlaps, vec![]);
@@ -342,12 +383,16 @@ pub(crate) mod test_serde {
     fn test_hitbox_updates() {
         let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
 
-        let mut hitbox = Shape::square(n64(2.0)).place(v2(n64(-10.0), n64(0.0))).still();
+        let mut hitbox = Shape::square(n64(2.0))
+            .place(v2(n64(-10.0), n64(0.0)))
+            .still();
         hitbox.vel.value = v2(n64(1.0), n64(0.0));
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert!(overlaps.is_empty());
 
-        let mut hitbox = Shape::circle(n64(2.0)).place(v2(n64(10.0), n64(0.0))).still();
+        let mut hitbox = Shape::circle(n64(2.0))
+            .place(v2(n64(10.0), n64(0.0)))
+            .still();
         hitbox.vel.value = v2(n64(1.0), n64(0.0));
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert!(overlaps.is_empty());
@@ -355,7 +400,10 @@ pub(crate) mod test_serde {
         advance(&mut collider, n64(11.0));
 
         let mut hitbox = collider.get_hitbox(0);
-        assert_eq!(hitbox.value, Shape::square(n64(2.0)).place(v2(n64(1.0), n64(0.0))));
+        assert_eq!(
+            hitbox.value,
+            Shape::square(n64(2.0)).place(v2(n64(1.0), n64(0.0)))
+        );
         assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
         assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
         assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
@@ -369,7 +417,10 @@ pub(crate) mod test_serde {
         advance(&mut collider, n64(14.0));
 
         let mut hitbox = collider.get_hitbox(1);
-        assert_eq!(hitbox.value, Shape::circle(n64(2.0)).place(v2(n64(24.0), n64(0.0))));
+        assert_eq!(
+            hitbox.value,
+            Shape::circle(n64(2.0)).place(v2(n64(24.0), n64(0.0)))
+        );
         assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
         assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
         assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
@@ -387,7 +438,10 @@ pub(crate) mod test_serde {
             Some((HbEvent::Collide, 0.into(), 1.into()))
         );
         let mut hitbox = collider.get_hitbox(0);
-        assert_eq!(hitbox.value, Shape::square(n64(2.0)).place(v2(n64(0.0), n64(-6.0))));
+        assert_eq!(
+            hitbox.value,
+            Shape::square(n64(2.0)).place(v2(n64(0.0), n64(-6.0)))
+        );
         assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(-1.0)));
         assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
         assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
@@ -395,14 +449,19 @@ pub(crate) mod test_serde {
         collider.set_hitbox_vel(0, hitbox.vel);
 
         let mut hitbox = collider.get_hitbox(1);
-        assert_eq!(hitbox.value, Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(-8.0))));
+        assert_eq!(
+            hitbox.value,
+            Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(-8.0)))
+        );
         assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(0.0)));
         assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
         assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
         hitbox.vel.value = v2(n64(0.0), n64(2.0));
         collider.set_hitbox_vel(1, hitbox.vel);
 
-        let hitbox = Shape::rect(v2(n64(2.0), n64(20.0))).place(v2(n64(0.0), n64(0.0))).still();
+        let hitbox = Shape::rect(v2(n64(2.0), n64(20.0)))
+            .place(v2(n64(0.0), n64(0.0)))
+            .still();
         assert_eq!(
             sort(collider.add_hitbox(2.into(), hitbox)),
             vec![0.into(), 1.into()]
@@ -444,7 +503,12 @@ pub(crate) mod test_serde {
                 .place(v2(n64(10.0), n64(0.0)))
                 .moving(v2(n64(-1.0), n64(0.0))),
         );
-        collider.add_hitbox(2.into(), Shape::square(n64(2.0)).place(v2(n64(0.0), n64(0.0))).still());
+        collider.add_hitbox(
+            2.into(),
+            Shape::square(n64(2.0))
+                .place(v2(n64(0.0), n64(0.0)))
+                .still(),
+        );
 
         assert_eq!(collider.get_overlaps(0), vec![]);
         assert_eq!(collider.get_overlaps(1), vec![]);
@@ -494,9 +558,16 @@ pub(crate) mod test_serde {
 
         collider.add_hitbox(
             0.into(),
-            Shape::square(n64(2.0)).place(v2(n64(-5.0), n64(0.0))).moving(v2(n64(1.0), n64(0.0))),
+            Shape::square(n64(2.0))
+                .place(v2(n64(-5.0), n64(0.0)))
+                .moving(v2(n64(1.0), n64(0.0))),
         );
-        collider.add_hitbox(1.into(), Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(0.0))).still());
+        collider.add_hitbox(
+            1.into(),
+            Shape::circle(n64(2.0))
+                .place(v2(n64(0.0), n64(0.0)))
+                .still(),
+        );
         collider.add_hitbox(
             2.into(),
             Shape::circle(n64(2.0))
@@ -528,10 +599,15 @@ pub(crate) mod test_serde {
 
         let overlaps = collider.add_hitbox(
             0.into(),
-            Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).moving(v2(n64(0.0), n64(1.))),
+            Shape::square(n64(1.))
+                .place(v2(n64(0.), n64(0.)))
+                .moving(v2(n64(0.0), n64(1.))),
         );
         assert_eq!(overlaps, vec![]);
-        let overlaps = collider.add_hitbox(1.into(), Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).still());
+        let overlaps = collider.add_hitbox(
+            1.into(),
+            Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).still(),
+        );
         assert_eq!(overlaps, vec![0.into()]);
 
         advance_to_event(&mut collider, n64(1.25));

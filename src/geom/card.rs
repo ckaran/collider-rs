@@ -126,8 +126,8 @@ impl Debug for CardMask {
 #[cfg(all(test, feature = "enable_serde"))]
 pub(crate) mod test_serde {
     use super::*;
-    use ron::ser;
     use ron::de;
+    use ron::ser;
     use std::default::Default;
 
     #[test]
@@ -159,12 +159,14 @@ pub(crate) mod test_serde {
     fn test_card_mask() {
         let pretty: ser::PrettyConfig = Default::default();
 
-        let choices = vec!(true, false);
+        let choices = vec![true, false];
         for i in choices.iter() {
             for j in choices.iter() {
                 for k in choices.iter() {
                     for l in choices.iter() {
-                        let dut = CardMask{flags: [*i, *j, *k, *l]};
+                        let dut = CardMask {
+                            flags: [*i, *j, *k, *l],
+                        };
                         let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
                         let dut2: CardMask = de::from_str(&serialized).unwrap();
                         assert_eq!(dut, dut2);

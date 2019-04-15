@@ -17,12 +17,12 @@ mod dur_hitbox;
 mod events;
 mod grid;
 
-use noisy_float::prelude::*;
 pub use self::collider::*;
-use std::f64;
 use self::dur_hitbox::{DurHbVel, DurHitbox};
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
+use noisy_float::prelude::*;
+use std::f64;
 
 #[cfg(feature = "enable_serde")]
 extern crate serde;

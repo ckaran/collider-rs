@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
-use std::cmp::Ordering;
 use crate::core::{HbVel, Hitbox};
 use crate::geom::{v2, Card, CardMask, DirVec2, Vec2};
+use noisy_float::prelude::*;
+use std::cmp::Ordering;
 
 mod normals;
 #[cfg(test)]
@@ -53,7 +53,10 @@ impl Shape {
     /// Dimensions must be non-negative. If `kind` is `Circle`, then the width
     /// and height must match.
     pub fn new(kind: ShapeKind, dims: Vec2) -> Shape {
-        assert!(dims.x >= n64(0.0) && dims.y >= n64(0.0), "dims must be non-negative");
+        assert!(
+            dims.x >= n64(0.0) && dims.y >= n64(0.0),
+            "dims must be non-negative"
+        );
         Shape::with_any_dims(kind, dims)
     }
 
@@ -260,7 +263,10 @@ impl PlacedShape {
         let bottom = self.min_y().min(other.min_y());
 
         let shape = Shape::rect(v2(right - left, top - bottom));
-        let pos = v2(left + shape.dims().x * n64(0.5), bottom + shape.dims().y * n64(0.5));
+        let pos = v2(
+            left + shape.dims().x * n64(0.5),
+            bottom + shape.dims().y * n64(0.5),
+        );
         PlacedShape::new(pos, shape)
     }
 

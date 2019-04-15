@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
 use crate::geom::*;
+use noisy_float::prelude::*;
 
 #[test]
 fn test_circle_advance() {
@@ -53,13 +53,25 @@ fn test_edges() {
 fn test_rect_rect_normal() {
     let src = Shape::rect(v2(n64(4.0), n64(4.0))).place(v2(n64(1.0), n64(1.0)));
     let dst = Shape::rect(v2(n64(8.0), n64(8.0))).place(v2(n64(2.0), n64(1.5)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(1.0), n64(0.0)), n64(5.0)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(1.0), n64(0.0)), n64(5.0))
+    );
     let dst = Shape::rect(v2(n64(8.0), n64(8.0))).place(v2(n64(0.0), n64(0.5)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(-1.0), n64(0.0)), n64(5.0)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(-1.0), n64(0.0)), n64(5.0))
+    );
     let dst = Shape::rect(v2(n64(4.0), n64(2.0))).place(v2(n64(3.8), n64(4.0)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(0.0), n64(1.0)), n64(0.0)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(0.0), n64(1.0)), n64(0.0))
+    );
     let dst = Shape::rect(v2(n64(8.0), n64(2.0))).place(v2(n64(-2.0), n64(-3.0)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(0.0), n64(-1.0)), n64(-1.0)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(0.0), n64(-1.0)), n64(-1.0))
+    );
 }
 
 #[test]
@@ -69,20 +81,33 @@ fn test_circle_circle_normal() {
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(v2(n64(1.0), n64(-1.0)), n64(2.5) - n64(2.0).sqrt())
-    );}
+    );
+}
 
 #[test]
 fn test_rect_circle_normal() {
     let src = Shape::rect(v2(n64(2.0), n64(2.0))).place(v2(n64(0.0), n64(0.0)));
 
     let dst = Shape::circle(n64(2.5)).place(v2(n64(-2.0), n64(0.0)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(-1.0), n64(0.0)), n64(0.25)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(-1.0), n64(0.0)), n64(0.25))
+    );
     let dst = Shape::circle(n64(2.5)).place(v2(n64(0.0), n64(-2.0)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(0.0), n64(-1.0)), n64(0.25)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(0.0), n64(-1.0)), n64(0.25))
+    );
     let dst = Shape::circle(n64(2.5)).place(v2(n64(2.0), n64(0.0)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(1.0), n64(0.0)), n64(0.25)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(1.0), n64(0.0)), n64(0.25))
+    );
     let dst = Shape::circle(n64(2.5)).place(v2(n64(0.0), n64(2.0)));
-    assert_eq!(dst.normal_from(&src), DirVec2::new(v2(n64(0.0), n64(1.0)), n64(0.25)));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(v2(n64(0.0), n64(1.0)), n64(0.25))
+    );
 
     let dst = Shape::circle(n64(2.5)).place(v2(n64(-2.0), n64(-2.0)));
     assert_eq!(

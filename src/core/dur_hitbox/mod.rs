@@ -14,10 +14,10 @@
 
 mod solvers;
 
-use noisy_float::prelude::*;
 use crate::core;
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
+use noisy_float::prelude::*;
 use std::f64;
 
 #[cfg(feature = "enable_serde")]
@@ -123,10 +123,16 @@ mod tests {
 
     #[test]
     fn test_rect_rect_collision() {
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(-11.0), n64(0.0)), Shape::rect(v2(n64(2.0), n64(2.0)))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(-11.0), n64(0.0)),
+            Shape::rect(v2(n64(2.0), n64(2.0))),
+        ));
         a.vel.value = v2(n64(2.0), n64(0.0));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(12.0), n64(2.0)), Shape::rect(v2(n64(2.0), n64(4.0)))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(12.0), n64(2.0)),
+            Shape::rect(v2(n64(2.0), n64(4.0))),
+        ));
         b.vel.value = v2(n64(-0.5), n64(0.0));
         b.vel.resize = v2(n64(1.0), n64(0.0));
         b.vel.duration = n64(100.0);
@@ -138,7 +144,10 @@ mod tests {
     #[test]
     fn test_circle_circle_collision() {
         let sqrt2 = n64(2.0).sqrt();
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(-0.1) * sqrt2, n64(0.0)), Shape::circle(n64(2.0))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(-0.1) * sqrt2, n64(0.0)),
+            Shape::circle(n64(2.0)),
+        ));
         a.vel.value = v2(n64(0.1), n64(0.0));
         a.vel.duration = n64(100.0);
         let mut b = DurHitbox::new(PlacedShape::new(
@@ -154,10 +163,16 @@ mod tests {
 
     #[test]
     fn test_rect_circle_collision() {
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(-11.0), n64(0.0)), Shape::circle(n64(2.0))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(-11.0), n64(0.0)),
+            Shape::circle(n64(2.0)),
+        ));
         a.vel.value = v2(n64(2.0), n64(0.0));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(12.0), n64(2.0)), Shape::rect(v2(n64(2.0), n64(4.0)))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(12.0), n64(2.0)),
+            Shape::rect(v2(n64(2.0), n64(4.0))),
+        ));
         b.vel.value = v2(n64(-1.0), n64(0.0));
         b.vel.duration = n64(100.0);
         assert_eq!(a.collide_time(&b), n64(7.0));
@@ -167,9 +182,15 @@ mod tests {
 
     #[test]
     fn test_rect_circle_angled_collision() {
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(0.), n64(0.)), Shape::square(n64(2.))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(0.), n64(0.)),
+            Shape::square(n64(2.)),
+        ));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(5.), n64(5.)), Shape::circle(n64(2.))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(5.), n64(5.)),
+            Shape::circle(n64(2.)),
+        ));
         b.vel.value = v2(n64(-1.), n64(-1.));
         b.vel.duration = n64(100.0);
         let collide_time = a.collide_time(&b);
@@ -179,10 +200,16 @@ mod tests {
 
     #[test]
     fn test_rect_rect_separation() {
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(0.0), n64(0.0)), Shape::rect(v2(n64(6.0), n64(4.0)))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(0.0), n64(0.0)),
+            Shape::rect(v2(n64(6.0), n64(4.0))),
+        ));
         a.vel.value = v2(n64(1.0), n64(1.0));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(1.0), n64(0.0)), Shape::rect(v2(n64(4.0), n64(4.0)))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(1.0), n64(0.0)),
+            Shape::rect(v2(n64(4.0), n64(4.0))),
+        ));
         b.vel.value = v2(n64(0.5), n64(0.0));
         b.vel.duration = n64(100.0);
         assert_eq!(a.separate_time(&b, n64(0.1)), n64(4.1));
@@ -193,9 +220,15 @@ mod tests {
     #[test]
     fn test_circle_circle_separation() {
         let sqrt2 = n64(2.0).sqrt();
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(2.0), n64(5.0)), Shape::circle(n64(2.0))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(2.0), n64(5.0)),
+            Shape::circle(n64(2.0)),
+        ));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(3.0), n64(4.0)), Shape::circle(n64(1.8))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(3.0), n64(4.0)),
+            Shape::circle(n64(1.8)),
+        ));
         b.vel.value = v2(n64(-1.0), n64(1.0));
         b.vel.duration = n64(100.0);
         assert_eq!(a.separate_time(&b, n64(0.1)), n64(1.0) + sqrt2);
@@ -206,9 +239,15 @@ mod tests {
     #[test]
     fn test_rect_circle_separation() {
         let sqrt2 = n64(2.0).sqrt();
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(4.0), n64(2.0)), Shape::rect(v2(n64(4.0), n64(6.0)))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(4.0), n64(2.0)),
+            Shape::rect(v2(n64(4.0), n64(6.0))),
+        ));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(3.0), n64(4.0)), Shape::circle(n64(3.8))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(3.0), n64(4.0)),
+            Shape::circle(n64(3.8)),
+        ));
         b.vel.value = v2(n64(-1.0), n64(1.0));
         b.vel.duration = n64(100.0);
         assert_eq!(a.separate_time(&b, n64(0.1)), n64(1.0) + sqrt2);
@@ -218,9 +257,15 @@ mod tests {
 
     #[test]
     fn test_rect_circle_angled_separation() {
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(0.), n64(0.)), Shape::square(n64(2.))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(0.), n64(0.)),
+            Shape::square(n64(2.)),
+        ));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(-1.), n64(1.)), Shape::circle(n64(2.))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(-1.), n64(1.)),
+            Shape::circle(n64(2.)),
+        ));
         b.vel.value = v2(n64(1.), n64(-1.));
         b.vel.duration = n64(100.0);
         let separate_time = a.separate_time(&b, n64(0.1));
@@ -230,10 +275,16 @@ mod tests {
 
     #[test]
     fn test_no_collision() {
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(-11.0), n64(0.0)), Shape::rect(v2(n64(2.0), n64(2.0)))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(-11.0), n64(0.0)),
+            Shape::rect(v2(n64(2.0), n64(2.0))),
+        ));
         a.vel.value = v2(n64(2.0), n64(0.0));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(12.0), n64(2.0)), Shape::rect(v2(n64(2.0), n64(4.0)))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(12.0), n64(2.0)),
+            Shape::rect(v2(n64(2.0), n64(4.0))),
+        ));
         b.vel.value = v2(n64(-1.0), n64(1.0));
         b.vel.duration = n64(100.0);
         assert_eq!(a.collide_time(&b), n64(f64::INFINITY));
@@ -252,10 +303,16 @@ mod tests {
 
     #[test]
     fn test_no_separation() {
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(5.0), n64(1.0)), Shape::rect(v2(n64(2.0), n64(2.0)))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(5.0), n64(1.0)),
+            Shape::rect(v2(n64(2.0), n64(2.0))),
+        ));
         a.vel.value = v2(n64(2.0), n64(1.0));
         a.vel.duration = n64(100.0);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(5.0), n64(1.0)), Shape::rect(v2(n64(2.0), n64(4.0)))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(5.0), n64(1.0)),
+            Shape::rect(v2(n64(2.0), n64(4.0))),
+        ));
         b.vel.value = v2(n64(2.0), n64(1.0));
         b.vel.duration = n64(100.0);
         assert_eq!(a.separate_time(&b, n64(0.1)), n64(f64::INFINITY));
@@ -275,9 +332,15 @@ mod tests {
     #[test]
     fn test_low_duration() {
         let sqrt2 = n64(2.0).sqrt();
-        let mut a = DurHitbox::new(PlacedShape::new(v2(n64(0.0), n64(0.0)), Shape::circle(n64(2.0))));
+        let mut a = DurHitbox::new(PlacedShape::new(
+            v2(n64(0.0), n64(0.0)),
+            Shape::circle(n64(2.0)),
+        ));
         a.vel.duration = n64(4.0) - sqrt2 + n64(0.01);
-        let mut b = DurHitbox::new(PlacedShape::new(v2(n64(4.0), n64(4.0)), Shape::circle(n64(2.0))));
+        let mut b = DurHitbox::new(PlacedShape::new(
+            v2(n64(4.0), n64(4.0)),
+            Shape::circle(n64(2.0)),
+        ));
         b.vel.value = v2(n64(-1.0), n64(-1.0));
         b.vel.duration = n64(4.0) - sqrt2 + n64(0.01);
         assert_eq!(a.collide_time(&b), n64(4.0) - sqrt2);

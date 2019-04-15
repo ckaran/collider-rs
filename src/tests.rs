@@ -356,7 +356,9 @@ pub(crate) mod test_serde {
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        let mut hitbox = Shape::circle(n64(2.0)).place(v2(n64(10.0), n64(0.0))).still();
+        let mut hitbox = Shape::circle(n64(2.0))
+            .place(v2(n64(10.0), n64(0.0)))
+            .still();
         hitbox.vel.value = v2(n64(-1.0), n64(0.0));
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert_eq!(overlaps, vec![]);

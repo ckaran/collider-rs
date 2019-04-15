@@ -351,9 +351,8 @@ fn interval_sector(left: N64, right: N64, val: N64) -> Ordering {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
-#[cfg(feature = "enable_serde")]
-#[derive(Serialize, Deserialize)]
-#[serde(remote = "Ordering")]
+#[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "enable_serde", serde(remote = "Ordering"))]
 enum OrderingDefForSerde {
     Less = -1,
     Equal = 0,
@@ -397,3 +396,85 @@ impl Sector {
         }
     }
 }
+
+#[cfg(feature = "enable_serde")]
+use bincode::{serialize, deserialize};
+
+#[cfg(feature = "enable_serde")]
+#[test]
+fn test_serde_shape_kind() {
+    {
+        let original: ShapeKind = ShapeKind::Circle;
+
+        let serialized = serialize(&original).unwrap();
+        let duplicate: ShapeKind = deserialize(&serialized).unwrap();
+        assert_eq!(original, duplicate);
+    }
+
+    {
+        let original: ShapeKind = ShapeKind::Rect;
+
+        let serialized = serialize(&original).unwrap();
+        let duplicate: ShapeKind = deserialize(&serialized).unwrap();
+        assert_eq!(original, duplicate);
+    }
+}
+
+#[cfg(feature = "enable_serde")]
+#[test]
+fn test_serde_shape() {
+    {
+        let x = n64(1.0);
+        let y = n64(1.0);
+        let vec = Vec2::new(x, y);
+        let original = Shape::new(ShapeKind::Circle, vec);
+
+        let serialized = serialize(&original).unwrap();
+        let duplicate: Shape = deserialize(&serialized).unwrap();
+        assert_eq!(original, duplicate);
+    }
+
+    {
+        let x = n64(1.0);
+        let y = n64(3.0);
+        let vec = Vec2::new(x, y);
+        let original = Shape::new(ShapeKind::Rect, vec);
+
+        let serialized = serialize(&original).unwrap();
+        let duplicate: Shape = deserialize(&serialized).unwrap();
+        assert_eq!(original, duplicate);
+    }
+}
+
+#[cfg(feature = "enable_serde")]
+#[test]
+fn test_serde_placed_shape() {
+    let original: PlacedShape = PlacedShape::new(
+        Vec2::new(n64(1.0), n64(3.0)),
+        Shape::new(ShapeKind::Circle, Vec2::new(n64(5.0), n64(5.0))),
+    );
+
+    let serialized = serialize(&original).unwrap();
+    let duplicate: PlacedShape = deserialize(&serialized).unwrap();
+    assert_eq!(original, duplicate);
+}
+
+#[cfg(feature = "enable_serde")]
+#[test]
+fn test_serde_sector() {
+    let original = Sector::new(Ordering::Less, Ordering::Less);
+
+    let serialized = serialize(&original).unwrap();
+    let duplicate: Sector = deserialize(&serialized).unwrap();
+    assert_eq!(original, duplicate);
+}
+
+//    #[cfg(feature = "enable_serde")]
+//    #[test]
+//    fn test_serde_FIXME() {
+//        let original: FIXME = FIXME;
+//
+//        let serialized = serialize(&original).unwrap();
+//        let duplicate: FIXME = deserialize(&serialized).unwrap();
+//        assert_eq!(original, duplicate);
+//    }

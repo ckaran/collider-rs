@@ -126,39 +126,33 @@ impl Debug for CardMask {
 #[cfg(all(test, feature = "enable_serde"))]
 pub(crate) mod test_serde {
     use super::*;
-    use ron::de;
-    use ron::ser;
-    use std::default::Default;
+    use bincode::{serialize, deserialize};
 
     #[test]
     fn test_card() {
-        let pretty: ser::PrettyConfig = Default::default();
-
         let dut = Card::MinusX;
-        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
-        let dut2: Card = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&dut).unwrap();
+        let dut2: Card = deserialize(&serialized).unwrap();
         assert_eq!(dut, dut2);
 
         let dut = Card::MinusY;
-        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
-        let dut2: Card = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&dut).unwrap();
+        let dut2: Card = deserialize(&serialized).unwrap();
         assert_eq!(dut, dut2);
 
         let dut = Card::PlusX;
-        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
-        let dut2: Card = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&dut).unwrap();
+        let dut2: Card = deserialize(&serialized).unwrap();
         assert_eq!(dut, dut2);
 
         let dut = Card::PlusY;
-        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
-        let dut2: Card = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&dut).unwrap();
+        let dut2: Card = deserialize(&serialized).unwrap();
         assert_eq!(dut, dut2);
     }
 
     #[test]
     fn test_card_mask() {
-        let pretty: ser::PrettyConfig = Default::default();
-
         let choices = vec![true, false];
         for i in choices.iter() {
             for j in choices.iter() {
@@ -167,8 +161,8 @@ pub(crate) mod test_serde {
                         let dut = CardMask {
                             flags: [*i, *j, *k, *l],
                         };
-                        let serialized = ser::to_string_pretty(&dut, pretty.clone()).unwrap();
-                        let dut2: CardMask = de::from_str(&serialized).unwrap();
+                        let serialized = serialize(&dut).unwrap();
+                        let dut2: CardMask = deserialize(&serialized).unwrap();
                         assert_eq!(dut, dut2);
                     }
                 }

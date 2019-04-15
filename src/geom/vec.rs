@@ -234,3 +234,28 @@ impl From<DirVec2> for Vec2 {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::f64;
+
+    #[cfg(feature = "enable_serde")]
+    use bincode::{serialize, deserialize};
+
+    #[cfg(feature = "enable_serde")]
+    #[test]
+    fn test_serde_vec_2() {
+        let elements = [n64(-f64::INFINITY), n64(-13.5), n64(-0.0), n64(0.0), n64(12.3), n64(f64::INFINITY)];
+        for x in elements.iter() {
+            for y in elements.iter() {
+                let original = Vec2::new(*x, *y);
+                println!("original = {:?}", original);
+
+                let serialized = serialize(&original).unwrap();
+                let duplicate: Vec2 = deserialize(&serialized).unwrap();
+                assert_eq!(original, duplicate);
+            }
+        }
+    }
+}

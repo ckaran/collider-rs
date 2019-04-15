@@ -331,17 +331,14 @@ fn test_separate_initial_overlap() {
 #[cfg(all(test, feature = "enable_serde"))]
 pub(crate) mod test_serde {
     use super::*;
-    use ron::de;
-    use ron::ser;
-    use std::default::Default;
+    use bincode::{serialize, deserialize};
 
     #[test]
     fn test_trivial() {
         let collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
 
-        let pretty: ser::PrettyConfig = Default::default();
-        let serialized = ser::to_string_pretty(&collider, pretty).unwrap();
-        let duplicate: Collider<TestHbProfile> = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&collider).unwrap();
+        let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
         assert_eq!(collider, duplicate);
     }
 
@@ -375,9 +372,8 @@ pub(crate) mod test_serde {
         );
         advance(&mut collider, n64(23.0));
 
-        let pretty: ser::PrettyConfig = Default::default();
-        let serialized = ser::to_string_pretty(&collider, pretty).unwrap();
-        let duplicate: Collider<TestHbProfile> = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&collider).unwrap();
+        let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
         assert_eq!(collider, duplicate);
     }
 
@@ -483,9 +479,8 @@ pub(crate) mod test_serde {
 
         advance(&mut collider, n64(37.125));
 
-        let pretty: ser::PrettyConfig = Default::default();
-        let serialized = ser::to_string_pretty(&collider, pretty).unwrap();
-        let duplicate: Collider<TestHbProfile> = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&collider).unwrap();
+        let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
         assert_eq!(collider, duplicate);
     }
 
@@ -548,9 +543,8 @@ pub(crate) mod test_serde {
         collider.remove_hitbox(1);
         assert_eq!(collider.get_overlaps(0), vec![]);
 
-        let pretty: ser::PrettyConfig = Default::default();
-        let serialized = ser::to_string_pretty(&collider, pretty).unwrap();
-        let duplicate: Collider<TestHbProfile> = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&collider).unwrap();
+        let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
         assert_eq!(collider, duplicate);
     }
 
@@ -589,9 +583,8 @@ pub(crate) mod test_serde {
             vec![0.into(), 1.into()]
         );
 
-        let pretty: ser::PrettyConfig = Default::default();
-        let serialized = ser::to_string_pretty(&collider, pretty).unwrap();
-        let duplicate: Collider<TestHbProfile> = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&collider).unwrap();
+        let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
         assert_eq!(collider, duplicate);
     }
 
@@ -620,9 +613,8 @@ pub(crate) mod test_serde {
 
         advance(&mut collider, n64(1.5));
 
-        let pretty: ser::PrettyConfig = Default::default();
-        let serialized = ser::to_string_pretty(&collider, pretty).unwrap();
-        let duplicate: Collider<TestHbProfile> = de::from_str(&serialized).unwrap();
+        let serialized = serialize(&collider).unwrap();
+        let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
         assert_eq!(collider, duplicate);
     }
 }

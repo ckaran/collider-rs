@@ -121,6 +121,34 @@ mod tests {
     use crate::core::dur_hitbox::DurHitbox;
     use std::f64;
 
+    #[cfg(feature = "enable_serde")]
+    use bincode::{serialize, deserialize};
+
+    #[cfg(feature = "enable_serde")]
+    #[test]
+    fn test_serde_db_hb_vel() {
+        let original = DurHbVel::still();
+
+        let serialized = serialize(&original).unwrap();
+        let duplicate: DurHbVel = deserialize(&serialized).unwrap();
+        assert_eq!(original, duplicate);
+    }
+
+    #[cfg(feature = "enable_serde")]
+    #[test]
+    fn test_serde_dur_hitbox() {
+        let mut original = DurHitbox::new(PlacedShape::new(
+            v2(n64(-11.0), n64(0.0)),
+            Shape::rect(v2(n64(2.0), n64(2.0))),
+        ));
+        original.vel.value = v2(n64(2.0), n64(0.0));
+        original.vel.duration = n64(100.0);
+
+        let serialized = serialize(&original).unwrap();
+        let duplicate: DurHitbox = deserialize(&serialized).unwrap();
+        assert_eq!(original, duplicate);
+    }
+
     #[test]
     fn test_rect_rect_collision() {
         let mut a = DurHitbox::new(PlacedShape::new(

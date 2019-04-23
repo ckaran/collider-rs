@@ -237,7 +237,10 @@ impl From<DirVec2> for Vec2 {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "enable_serde")]
     use super::*;
+
+    #[cfg(feature = "enable_serde")]
     use std::f64;
 
     #[cfg(feature = "enable_serde")]

@@ -350,6 +350,7 @@ fn interval_sector(left: N64, right: N64, val: N64) -> Ordering {
     }
 }
 
+#[allow(dead_code)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "enable_serde", serde(remote = "Ordering"))]
@@ -397,7 +398,7 @@ impl Sector {
     }
 }
 
-#[cfg(feature = "enable_serde")]
+#[cfg(all(feature = "enable_serde", test))]
 use bincode::{serialize, deserialize};
 
 #[cfg(feature = "enable_serde")]

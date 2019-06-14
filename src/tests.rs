@@ -331,7 +331,7 @@ fn test_separate_initial_overlap() {
 #[cfg(all(test, feature = "enable_serde"))]
 pub(crate) mod test_serde {
     use super::*;
-    use bincode::{serialize, deserialize};
+    use bincode::{deserialize, serialize};
 
     #[test]
     fn test_trivial() {

@@ -399,7 +399,7 @@ impl Sector {
 }
 
 #[cfg(all(feature = "enable_serde", test))]
-use bincode::{serialize, deserialize};
+use bincode::{deserialize, serialize};
 
 #[cfg(feature = "enable_serde")]
 #[test]

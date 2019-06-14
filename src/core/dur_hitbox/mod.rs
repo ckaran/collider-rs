@@ -122,7 +122,7 @@ mod tests {
     use std::f64;
 
     #[cfg(feature = "enable_serde")]
-    use bincode::{serialize, deserialize};
+    use bincode::{deserialize, serialize};
 
     #[cfg(feature = "enable_serde")]
     #[test]

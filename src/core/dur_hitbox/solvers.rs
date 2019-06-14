@@ -39,7 +39,7 @@ pub fn separate_time(a: &DurHitbox, b: &DurHitbox, padding: N64) -> N64 {
         (ShapeKind::Rect, ShapeKind::Circle) => (b, a),
         _ => (a, b),
     };
-    let mut a = a.clone();
+    let mut a = *a;
     a.value.shape = Shape::new(
         a.value.kind(),
         a.value.dims() + v2(padding, padding) * n64(2.0),
@@ -129,9 +129,9 @@ fn rect_circle_collide_time(rect: &DurHitbox, circle: &DurHitbox, duration: N64)
     if base_time >= duration {
         n64(f64::INFINITY)
     } else {
-        let mut rect = rect.clone();
+        let mut rect = *rect;
         rect.value = rect.advanced_shape(base_time);
-        let mut circle = circle.clone();
+        let mut circle = *circle;
         circle.value = circle.advanced_shape(base_time);
 
         base_time + rebased_rect_circle_collide_time(&rect, &circle)
@@ -147,11 +147,11 @@ fn rect_circle_separate_time(rect: &DurHitbox, circle: &DurHitbox) -> N64 {
         return n64(f64::INFINITY);
     }
 
-    let mut rect = rect.clone();
+    let mut rect = *rect;
     rect.value = rect.advanced_shape(base_time);
     rect.vel = rect.vel.negate();
 
-    let mut circle = circle.clone();
+    let mut circle = *circle;
     circle.value = circle.advanced_shape(base_time);
     circle.vel = circle.vel.negate();
 

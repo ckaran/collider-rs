@@ -198,6 +198,6 @@ impl EventManager {
     }
 
     fn peek_key(&self) -> Option<EventKey> {
-        self.events.keys().next().map(|&key| key)
+        self.events.keys().next().cloned()
     }
 }

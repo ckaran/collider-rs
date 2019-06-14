@@ -122,6 +122,7 @@ impl<P: HbProfile> Collider<P> {
     /// The returned value is a tuple, denoting the type of event (`Collide` or
     /// `Separate`) and the two hitbox profiles involved, in increasing order by
     /// `HbId`.
+    #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<(HbEvent, P, P)> {
         while let Some(event) = self.events.next(self.time, &mut self.hitboxes) {
             if let Some((event, id_1, id_2)) = self.process_event(event) {
@@ -486,7 +487,7 @@ impl<P: HbProfile> HitboxInfo<P> {
             time >= self.start_time && time <= self.hitbox.vel.end_time,
             "invalid time"
         );
-        let mut result = self.hitbox.clone();
+        let mut result = self.hitbox;
         result.value = result.advanced_shape(time - self.start_time);
         result.to_dur_hitbox(time)
     }
@@ -496,7 +497,7 @@ impl<P: HbProfile> HitboxInfo<P> {
             time >= self.start_time && time <= self.pub_end_time,
             "invalid time"
         );
-        let mut result = self.hitbox.clone();
+        let mut result = self.hitbox;
         result.vel.end_time = self.pub_end_time;
         result.value = result.advanced_shape(time - self.start_time);
         result

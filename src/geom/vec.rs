@@ -31,6 +31,7 @@ pub struct Vec2 {
     pub y: N64,
 }
 
+#[allow(clippy::len_without_is_empty)]
 impl Vec2 {
     /// Constructs a vector with the given `x` and `y` coordinates.
     #[inline]
@@ -194,6 +195,7 @@ pub struct DirVec2 {
     len: N64,
 }
 
+#[allow(clippy::len_without_is_empty)]
 impl DirVec2 {
     /// Constructs a vector with the given direction `dir` and length `len`.
     ///

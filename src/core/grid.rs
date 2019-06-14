@@ -176,7 +176,7 @@ impl Grid {
                     group: new_area.group,
                 };
                 if old_area.map_or(true, |old_area| !old_area.contains(key)) {
-                    let other_ids = self.map.entry(key).or_insert_with(|| TightSet::new());
+                    let other_ids = self.map.entry(key).or_insert_with(TightSet::new);
                     let success = other_ids.insert(hitbox_id);
                     assert!(success);
                 }

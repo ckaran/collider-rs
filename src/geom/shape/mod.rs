@@ -14,7 +14,7 @@
 
 use crate::core::{HbVel, Hitbox};
 use crate::geom::{v2, Card, CardMask, DirVec2, Vec2};
-use noisy_float::prelude::*;
+use num::{BigRational, Signed};
 use std::cmp::Ordering;
 
 mod normals;
@@ -39,7 +39,7 @@ pub enum ShapeKind {
 /// Represents a shape, without any position.
 ///
 /// Each shape has a `width` and `height`, which are allowed to be negative.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Shape {
     kind: ShapeKind,
@@ -54,7 +54,8 @@ impl Shape {
     /// and height must match.
     pub fn new(kind: ShapeKind, dims: Vec2) -> Shape {
         assert!(
-            dims.x >= n64(0.0) && dims.y >= n64(0.0),
+            dims.x >= BigRational::from_float(0.0).unwrap()
+                && dims.y >= BigRational::from_float(0.0).unwrap(),
             "dims must be non-negative"
         );
         Shape::with_any_dims(kind, dims)
@@ -70,7 +71,7 @@ impl Shape {
 
     /// Constructs a new circle shape, using `diam` as the width and height.
     #[inline]
-    pub fn circle(diam: N64) -> Shape {
+    pub fn circle(diam: BigRational) -> Shape {
         Shape::new(ShapeKind::Circle, v2(diam, diam))
     }
 
@@ -83,7 +84,7 @@ impl Shape {
 
     /// Constructs a new axis-aligned square shape with the given `width`.
     #[inline]
-    pub fn square(width: N64) -> Shape {
+    pub fn square(width: BigRational) -> Shape {
         Shape::new(ShapeKind::Rect, v2(width, width))
     }
 
@@ -105,13 +106,13 @@ impl Shape {
         PlacedShape::new(pos, self)
     }
 
-    pub(crate) fn advance(&self, resize_vel: Vec2, elapsed: N64) -> Shape {
+    pub(crate) fn advance(&self, resize_vel: Vec2, elapsed: BigRational) -> Shape {
         Shape::with_any_dims(self.kind, self.dims + resize_vel * elapsed)
     }
 }
 
 /// Represents a shape with a position.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Hash)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct PlacedShape {
     /// The position of the center of the shape.
@@ -140,29 +141,29 @@ impl PlacedShape {
     }
 
     /// Returns the lowest x coordinate of the `PlacedShape`.
-    pub fn min_x(&self) -> N64 {
+    pub fn min_x(&self) -> BigRational {
         self.bounds_left()
     }
 
     /// Returns the lowest y coordinate of the `PlacedShape`.
-    pub fn min_y(&self) -> N64 {
+    pub fn min_y(&self) -> BigRational {
         self.bounds_bottom()
     }
 
     /// Returns the highest x coordinate of the `PlacedShape`.
-    pub fn max_x(&self) -> N64 {
+    pub fn max_x(&self) -> BigRational {
         self.bounds_right()
     }
 
     /// Returns the highest y coordinate of the `PlacedShape`.
-    pub fn max_y(&self) -> N64 {
+    pub fn max_y(&self) -> BigRational {
         self.bounds_top()
     }
 
     /// Returns `true` if the two shapes overlap, subject to negligible
     /// numerical error.
     pub fn overlaps(&self, other: &PlacedShape) -> bool {
-        self.normal_from(other).len() >= n64(0.0)
+        self.normal_from(other).len() >= BigRational::from_float(0.0).unwrap()
     }
 
     /// Returns a normal vector that points in the direction from `other` to
@@ -230,7 +231,7 @@ impl PlacedShape {
 
     /// Shorthand for `Hitbox::new(self, HbVel::moving_until(vel, end_time))`.
     #[inline]
-    pub fn moving_until(self, vel: Vec2, end_time: N64) -> Hitbox {
+    pub fn moving_until(self, vel: Vec2, end_time: BigRational) -> Hitbox {
         Hitbox::new(self, HbVel::moving_until(vel, end_time))
     }
 
@@ -242,7 +243,7 @@ impl PlacedShape {
 
     /// Shorthand for `Hitbox::new(self, HbVel::still_until(end_time))`.
     #[inline]
-    pub fn still_until(self, end_time: N64) -> Hitbox {
+    pub fn still_until(self, end_time: BigRational) -> Hitbox {
         Hitbox::new(self, HbVel::still_until(end_time))
     }
 
@@ -264,13 +265,13 @@ impl PlacedShape {
 
         let shape = Shape::rect(v2(right - left, top - bottom));
         let pos = v2(
-            left + shape.dims().x * n64(0.5),
-            bottom + shape.dims().y * n64(0.5),
+            left + shape.dims().x * BigRational::from_float(0.5).unwrap(),
+            bottom + shape.dims().y * BigRational::from_float(0.5).unwrap(),
         );
         PlacedShape::new(pos, shape)
     }
 
-    pub(crate) fn advance(&self, vel: Vec2, resize_vel: Vec2, elapsed: N64) -> PlacedShape {
+    pub(crate) fn advance(&self, vel: Vec2, resize_vel: Vec2, elapsed: BigRational) -> PlacedShape {
         PlacedShape::new(
             self.pos + vel * elapsed,
             self.shape.advance(resize_vel, elapsed),
@@ -282,20 +283,20 @@ pub(crate) trait PlacedBounds {
     fn bounds_center(&self) -> &Vec2;
     fn bounds_dims(&self) -> &Vec2;
 
-    fn bounds_bottom(&self) -> N64 {
-        self.bounds_center().y - self.bounds_dims().y * n64(0.5)
+    fn bounds_bottom(&self) -> BigRational {
+        self.bounds_center().y - self.bounds_dims().y * BigRational::from_float(0.5).unwrap()
     }
-    fn bounds_left(&self) -> N64 {
-        self.bounds_center().x - self.bounds_dims().x * n64(0.5)
+    fn bounds_left(&self) -> BigRational {
+        self.bounds_center().x - self.bounds_dims().x * BigRational::from_float(0.5).unwrap()
     }
-    fn bounds_top(&self) -> N64 {
-        self.bounds_center().y + self.bounds_dims().y * n64(0.5)
+    fn bounds_top(&self) -> BigRational {
+        self.bounds_center().y + self.bounds_dims().y * BigRational::from_float(0.5).unwrap()
     }
-    fn bounds_right(&self) -> N64 {
-        self.bounds_center().x + self.bounds_dims().x * n64(0.5)
+    fn bounds_right(&self) -> BigRational {
+        self.bounds_center().x + self.bounds_dims().x * BigRational::from_float(0.5).unwrap()
     }
 
-    fn edge(&self, card: Card) -> N64 {
+    fn edge(&self, card: Card) -> BigRational {
         match card {
             Card::MinusY => -self.bounds_bottom(),
             Card::MinusX => -self.bounds_left(),
@@ -304,7 +305,7 @@ pub(crate) trait PlacedBounds {
         }
     }
 
-    fn max_edge(&self) -> N64 {
+    fn max_edge(&self) -> BigRational {
         Card::values()
             .iter()
             .map(|&card| self.edge(card).abs())
@@ -312,7 +313,7 @@ pub(crate) trait PlacedBounds {
             .unwrap()
     }
 
-    fn card_overlap(&self, src: &Self, card: Card) -> N64 {
+    fn card_overlap(&self, src: &Self, card: Card) -> BigRational {
         src.edge(card) + self.edge(card.flip())
     }
 
@@ -340,7 +341,7 @@ impl PlacedBounds for PlacedShape {
     }
 }
 
-fn interval_sector(left: N64, right: N64, val: N64) -> Ordering {
+fn interval_sector(left: BigRational, right: BigRational, val: BigRational) -> Ordering {
     if val < left {
         Ordering::Less
     } else if val > right {
@@ -425,8 +426,8 @@ fn test_serde_shape_kind() {
 #[test]
 fn test_serde_shape() {
     {
-        let x = n64(1.0);
-        let y = n64(1.0);
+        let x = BigRational::from_float(1.0).unwrap();
+        let y = BigRational::from_float(1.0).unwrap();
         let vec = Vec2::new(x, y);
         let original = Shape::new(ShapeKind::Circle, vec);
 
@@ -436,8 +437,8 @@ fn test_serde_shape() {
     }
 
     {
-        let x = n64(1.0);
-        let y = n64(3.0);
+        let x = BigRational::from_float(1.0).unwrap();
+        let y = BigRational::from_float(3.0).unwrap();
         let vec = Vec2::new(x, y);
         let original = Shape::new(ShapeKind::Rect, vec);
 
@@ -451,8 +452,17 @@ fn test_serde_shape() {
 #[test]
 fn test_serde_placed_shape() {
     let original: PlacedShape = PlacedShape::new(
-        Vec2::new(n64(1.0), n64(3.0)),
-        Shape::new(ShapeKind::Circle, Vec2::new(n64(5.0), n64(5.0))),
+        Vec2::new(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(3.0).unwrap(),
+        ),
+        Shape::new(
+            ShapeKind::Circle,
+            Vec2::new(
+                BigRational::from_float(5.0).unwrap(),
+                BigRational::from_float(5.0).unwrap(),
+            ),
+        ),
     );
 
     let serialized = serialize(&original).unwrap();

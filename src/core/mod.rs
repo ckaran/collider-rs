@@ -21,7 +21,7 @@ pub use self::collider::*;
 use self::dur_hitbox::{DurHbVel, DurHitbox};
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
-use noisy_float::prelude::*;
+use num::BigRational;
 use std::f64;
 
 #[cfg(feature = "enable_serde")]
@@ -29,13 +29,11 @@ extern crate serde;
 #[cfg(feature = "enable_serde")]
 use self::serde::*;
 
-const HIGH_TIME: f64 = 1e50;
-
 /// Type used as a handle for referencing hitboxes in a `Collider` instance.
 pub type HbId = u64;
 
 /// Velocity information describing how a hitbox shape is changing over time.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct HbVel {
     /// The movement velocity of the hitbox.
@@ -60,7 +58,7 @@ pub struct HbVel {
     /// Collider will panic if the end time is exceeded without update, at least
     /// in unoptimized builds.  It is ultimately the user's responsibility to
     /// ensure that end times are not exceeded.
-    pub end_time: N64,
+    pub end_time: BigRational,
 }
 
 impl HbVel {
@@ -70,13 +68,13 @@ impl HbVel {
         HbVel {
             value,
             resize: Vec2::zero(),
-            end_time: n64(f64::INFINITY),
+            end_time: BigRational::from_float(f64::INFINITY).unwrap(),
         }
     }
 
     /// Creates an `HbVel` with the given `value` and `end_time`.
     #[inline]
-    pub fn moving_until(value: Vec2, end_time: N64) -> HbVel {
+    pub fn moving_until(value: Vec2, end_time: BigRational) -> HbVel {
         HbVel {
             value,
             resize: Vec2::zero(),
@@ -90,13 +88,13 @@ impl HbVel {
         HbVel {
             value: Vec2::zero(),
             resize: Vec2::zero(),
-            end_time: n64(f64::INFINITY),
+            end_time: BigRational::from_float(f64::INFINITY).unwrap(),
         }
     }
 
     /// Creates a stationary `HbVel` with the given `end_time`.
     #[inline]
-    pub fn still_until(end_time: N64) -> HbVel {
+    pub fn still_until(end_time: BigRational) -> HbVel {
         HbVel {
             value: Vec2::zero(),
             resize: Vec2::zero(),
@@ -121,7 +119,7 @@ impl PlacedBounds for HbVel {
 }
 
 /// Represents a moving shape for continuous collision testing.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Hitbox {
     /// The placed shape at the given point in time.
@@ -144,14 +142,13 @@ impl Hitbox {
         Hitbox { value, vel }
     }
 
-    fn advanced_shape(&self, time: N64) -> PlacedShape {
-        assert!(time < n64(HIGH_TIME), "requires time < {}", n64(HIGH_TIME));
+    fn advanced_shape(&self, time: BigRational) -> PlacedShape {
         self.value.advance(self.vel.value, self.vel.resize, time)
     }
 
-    fn validate(&self, min_size: N64, present_time: N64) {
+    fn validate(&self, min_size: BigRational, present_time: BigRational) {
         assert!(
-            !self.vel.end_time.is_nan() && self.vel.end_time >= present_time,
+            self.vel.end_time >= present_time,
             "end time must exceed present time"
         );
         if self.value.kind() == ShapeKind::Circle {
@@ -167,20 +164,20 @@ impl Hitbox {
         );
     }
 
-    fn time_until_too_small(&self, min_size: N64) -> N64 {
-        let min_size = min_size * n64(0.9);
+    fn time_until_too_small(&self, min_size: BigRational) -> BigRational {
+        let min_size = min_size * BigRational::from_float(0.9).unwrap();
         assert!(self.value.dims().x > min_size && self.value.dims().y > min_size);
-        let mut time = n64(f64::INFINITY);
-        if self.vel.resize.x < n64(0.0) {
+        let mut time = BigRational::from_float(f64::INFINITY).unwrap();
+        if self.vel.resize.x < BigRational::from_float(0.0).unwrap() {
             time = time.min((min_size - self.value.dims().x) / self.vel.value.x);
         }
-        if self.vel.resize.y < n64(0.0) {
+        if self.vel.resize.y < BigRational::from_float(0.0).unwrap() {
             time = time.min((min_size - self.value.dims().y) / self.vel.value.y);
         }
         time
     }
 
-    fn to_dur_hitbox(&self, time: N64) -> DurHitbox {
+    fn to_dur_hitbox(&self, time: BigRational) -> DurHitbox {
         assert!(time <= self.vel.end_time);
         DurHitbox {
             value: self.value,

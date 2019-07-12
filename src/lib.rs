@@ -43,7 +43,7 @@
 //! ```
 //! use collider::{Collider, HbEvent, HbId, HbProfile};
 //! use collider::geom::{Shape, v2};
-//! use noisy_float::prelude::*;
+//! use num::BigRational;
 //!
 //! #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 //! struct DemoHbProfile { id: HbId } // add any additional identfying data to this struct
@@ -53,18 +53,18 @@
 //!     fn can_interact(&self, _other: &DemoHbProfile) -> bool { true }
 //! }
 //!
-//! let mut collider: Collider<DemoHbProfile> = Collider::new(n64(4.0), n64(0.01));
+//! let mut collider: Collider<DemoHbProfile> = Collider::new(BigRational::from_float(4.0).unwrap(), BigRational::from_float(0.01).unwrap());
 //!
-//! let hitbox = Shape::square(n64(2.0)).place(v2(n64(-10.0), n64(0.0))).moving(v2(n64(1.0), n64(0.0)));
+//! let hitbox = Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(BigRational::from_float(-10.0).unwrap(), BigRational::from_float(0.0).unwrap())).moving(v2(BigRational::from_float(1.0).unwrap(), BigRational::from_float(0.0).unwrap()));
 //! let overlaps = collider.add_hitbox(DemoHbProfile { id: 0 }, hitbox);
 //! assert!(overlaps.is_empty());
 //!
-//! let hitbox = Shape::square(n64(2.0)).place(v2(n64(10.0), n64(0.0))).moving(v2(n64(-1.0), n64(0.0)));
+//! let hitbox = Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(BigRational::from_float(10.0).unwrap(), BigRational::from_float(0.0).unwrap())).moving(v2(BigRational::from_float(-1.0).unwrap(), BigRational::from_float(0.0).unwrap()));
 //! let overlaps = collider.add_hitbox(DemoHbProfile { id: 1 }, hitbox);
 //! assert!(overlaps.is_empty());
 //!
-//! while collider.time() < n64(20.0) {
-//!     let time = collider.next_time().min(n64(20.0));
+//! while collider.time() < BigRational::from_float(20.0).unwrap() {
+//!     let time = collider.next_time().min(BigRational::from_float(20.0).unwrap());
 //!     collider.set_time(time);
 //!     if let Some((event, profile_1, profile_2)) = collider.next() {
 //!         println!("{:?} between {:?} and {:?} at time {}.",
@@ -73,7 +73,7 @@
 //!             println!("Speed of collided hitboxes is halved.");
 //!             for profile in [profile_1, profile_2].iter() {
 //!                 let mut hb_vel = collider.get_hitbox(profile.id()).vel;
-//!                 hb_vel.value *= n64(0.5);
+//!                 hb_vel.value *= BigRational::from_float(0.5).unwrap();
 //!                 collider.set_hitbox_vel(profile.id(), hb_vel);
 //!             }
 //!         }
@@ -81,9 +81,9 @@
 //! }
 //!
 //! // the above loop prints the following events:
-//! //   Collide between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time n64(9.)
+//! //   Collide between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time BigRational::from_float(9.).unwrap()
 //! //   Speed of collided hitboxes is halved.
-//! //   Separate between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time n64(13.01).
+//! //   Separate between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time BigRational::from_float(13.01).unwrap().
 //! ```
 
 extern crate fnv;

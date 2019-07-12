@@ -18,11 +18,11 @@ default = []
 # If you use this feature, then the internal state of the collider can be
 # serialized and deserialized via serde.  In most cases this isn't needed, but
 # should you need it, you will **really need it**.
-enable_serde = ["serde", "bincode", "noisy_float/serde-1"]
+enable_serde = ["serde", "bincode"]
 
 [dependencies]
 fnv = "^1.0.3"
-noisy_float = {version = "0.1.9"}
+num = {version="0.2.0", features=["std", "i128", "rand", "serde"]}
 
 # Optional dependencies for supporting serde.  Most people will not need or want
 # to use this capability, but for those that want to be able to freeze the state

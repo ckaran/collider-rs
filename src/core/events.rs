@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::core::{HbId, HIGH_TIME};
+use crate::core::HbId;
 use crate::util::{OneOrTwo, TightSet};
-use noisy_float::prelude::*;
+use num::BigRational;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::f64;
@@ -30,15 +30,15 @@ use self::serde::*;
 
 const PAIR_BASE: u64 = 0x8000_0000_0000_0000;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct EventKey {
-    time: N64,
+    time: BigRational,
     index: u64,
 }
 
 impl EventKey {
-    fn time(&self) -> N64 {
+    fn time(&self) -> BigRational {
         self.time
     }
 }
@@ -123,7 +123,7 @@ impl EventManager {
 
     pub fn add_solitaire_event(
         &mut self,
-        time: N64,
+        time: BigRational,
         event: InternalEvent,
         key_set: &mut TightSet<EventKey>,
     ) {
@@ -135,7 +135,7 @@ impl EventManager {
 
     pub fn add_pair_event(
         &mut self,
-        time: N64,
+        time: BigRational,
         event: InternalEvent,
         first_key_set: &mut TightSet<EventKey>,
         second_key_set: &mut TightSet<EventKey>,
@@ -162,26 +162,29 @@ impl EventManager {
         key_set.clear();
     }
 
-    fn new_event_key(&mut self, time: N64, for_pair: bool) -> Option<EventKey> {
-        if time >= n64(HIGH_TIME) {
-            None
-        } else {
-            let mut index = self.next_event_index;
-            self.next_event_index += 1;
-            assert!(index < PAIR_BASE);
-            if for_pair {
-                index += PAIR_BASE;
-            }
-            let result = EventKey { time, index };
-            Some(result)
+    fn new_event_key(&mut self, time: BigRational, for_pair: bool) -> Option<EventKey> {
+        let mut index = self.next_event_index;
+        self.next_event_index += 1;
+        assert!(index < PAIR_BASE);
+        if for_pair {
+            index += PAIR_BASE;
         }
+        let result = EventKey { time, index };
+        Some(result)
     }
 
-    pub fn peek_time(&self) -> N64 {
-        self.peek_key().map_or(n64(f64::INFINITY), |key| key.time())
+    pub fn peek_time(&self) -> BigRational {
+        self.peek_key()
+            .map_or(BigRational::from_float(f64::INFINITY).unwrap(), |key| {
+                key.time()
+            })
     }
 
-    pub fn next<M: EventKeysMap>(&mut self, time: N64, map: &mut M) -> Option<InternalEvent> {
+    pub fn next<M: EventKeysMap>(
+        &mut self,
+        time: BigRational,
+        map: &mut M,
+    ) -> Option<InternalEvent> {
         if let Some(key) = self.peek_key() {
             if key.time() == time {
                 let event = self.events.remove(&key).unwrap();

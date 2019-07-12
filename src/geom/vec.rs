@@ -13,7 +13,9 @@
 // limitations under the License.
 
 use crate::geom::card::Card;
-use noisy_float::prelude::*;
+use crate::util::{approx_cosine, approx_sine, approx_square_root};
+use num::BigRational;
+use std::default::Default;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[cfg(feature = "enable_serde")]
@@ -21,21 +23,30 @@ extern crate serde;
 #[cfg(feature = "enable_serde")]
 use self::serde::*;
 
-/// A 2-D Cartesian vector using finite `N64` values.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Default, Hash)]
+/// A 2-D Cartesian vector using finite `BigRational` values.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Hash)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Vec2 {
     /// The x-coordinate.
-    pub x: N64,
+    pub x: BigRational,
     /// The y-coordinate.
-    pub y: N64,
+    pub y: BigRational,
+}
+
+impl Default for Vec2 {
+    fn default() -> Self {
+        Self::new(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        )
+    }
 }
 
 #[allow(clippy::len_without_is_empty)]
 impl Vec2 {
     /// Constructs a vector with the given `x` and `y` coordinates.
     #[inline]
-    pub fn new(x: N64, y: N64) -> Vec2 {
+    pub fn new(x: BigRational, y: BigRational) -> Vec2 {
         Vec2 { x, y }
     }
 
@@ -49,7 +60,7 @@ impl Vec2 {
     ///
     /// Due to underflow, this might be `0.0` even if `x` and `y` are non-zero
     /// but very small.
-    pub fn len_sq(&self) -> N64 {
+    pub fn len_sq(&self) -> BigRational {
         self.x * self.x + self.y * self.y
     }
 
@@ -57,15 +68,18 @@ impl Vec2 {
     ///
     /// Due to underflow, this might be `0.0` even if `x` and `y` are non-zero
     /// but very small.
-    pub fn len(&self) -> N64 {
-        self.len_sq().sqrt()
+    pub fn len(&self) -> BigRational {
+        let value = self.len_sq();
+        let epsilon = value / BigRational::from_float(1000000.0).unwrap();
+
+        approx_square_root(value, epsilon).unwrap()
     }
 
     /// Returns a vector in the same direction as `self` but with length
     /// (approximately) `1.0`, or `None` if `self.len() == 0.0`.
     pub fn normalize(&self) -> Option<Vec2> {
         let len = self.len();
-        if len == n64(0.0) {
+        if len == BigRational::from_float(0.0).unwrap() {
             None
         } else {
             Some(Vec2::new(self.x / len, self.y / len))
@@ -74,12 +88,12 @@ impl Vec2 {
     }
 
     /// Computes the square of the Euclidean distance between two vectors.
-    pub fn dist_sq(&self, other: &Vec2) -> N64 {
+    pub fn dist_sq(&self, other: &Vec2) -> BigRational {
         (*self - *other).len_sq()
     }
 
     /// Computes the Euclidean distance between two vectors.
-    pub fn dist(&self, other: &Vec2) -> N64 {
+    pub fn dist(&self, other: &Vec2) -> BigRational {
         (*self - *other).len()
     }
 
@@ -88,43 +102,44 @@ impl Vec2 {
     /// Using `ratio = 0.0` will return `self`, and using `ratio = 1.0` will
     /// return `other`. Can also extrapolate using `ratio > 1.0` or
     /// `ratio < 0.0`.
-    pub fn lerp(&self, other: Vec2, ratio: N64) -> Vec2 {
-        (n64(1.0) - ratio) * *self + ratio * other
+    pub fn lerp(&self, other: Vec2, ratio: BigRational) -> Vec2 {
+        (BigRational::from_float(1.0).unwrap() - ratio) * *self + ratio * other
     }
 
     /// Rotates the vector by `angle` radians counter-clockwise (assuming +x is
     /// right and +y is up).
-    pub fn rotate(&self, angle: N64) -> Vec2 {
-        let sin = angle.sin();
-        let cos = angle.cos();
+    pub fn rotate(&self, angle: BigRational) -> Vec2 {
+        let epsilon = BigRational::from_float(1e-32).unwrap();
+        let sin = approx_sine(angle.clone(), epsilon.clone()).unwrap();
+        let cos = approx_cosine(angle.clone(), epsilon.clone()).unwrap();
         Vec2::new(cos * self.x - sin * self.y, sin * self.x + cos * self.y)
     }
 }
 
-impl Mul<Vec2> for N64 {
+impl Mul<Vec2> for BigRational {
     type Output = Vec2;
     fn mul(self, rhs: Vec2) -> Vec2 {
         Vec2::new(self * rhs.x, self * rhs.y)
     }
 }
 
-impl Mul<N64> for Vec2 {
+impl Mul<BigRational> for Vec2 {
     type Output = Vec2;
-    fn mul(self, rhs: N64) -> Vec2 {
+    fn mul(self, rhs: BigRational) -> Vec2 {
         Vec2::new(self.x * rhs, self.y * rhs)
     }
 }
 
-impl MulAssign<N64> for Vec2 {
-    fn mul_assign(&mut self, rhs: N64) {
+impl MulAssign<BigRational> for Vec2 {
+    fn mul_assign(&mut self, rhs: BigRational) {
         self.x *= rhs;
         self.y *= rhs;
     }
 }
 
 impl Mul<Vec2> for Vec2 {
-    type Output = N64;
-    fn mul(self, rhs: Vec2) -> N64 {
+    type Output = BigRational;
+    fn mul(self, rhs: Vec2) -> BigRational {
         self.x * rhs.x + self.y * rhs.y
     }
 }
@@ -167,17 +182,29 @@ impl Neg for Vec2 {
 impl From<Card> for Vec2 {
     fn from(card: Card) -> Vec2 {
         match card {
-            Card::MinusX => v2(n64(-1.0), n64(0.0)),
-            Card::MinusY => v2(n64(0.0), n64(-1.0)),
-            Card::PlusX => v2(n64(1.0), n64(0.0)),
-            Card::PlusY => v2(n64(0.0), n64(1.0)),
+            Card::MinusX => v2(
+                BigRational::from_float(-1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Card::MinusY => v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(-1.0).unwrap(),
+            ),
+            Card::PlusX => v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Card::PlusY => v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(1.0).unwrap(),
+            ),
         }
     }
 }
 
 /// Shorthand for invoking the `Vec2` constructor.
 #[inline]
-pub fn v2(x: N64, y: N64) -> Vec2 {
+pub fn v2(x: BigRational, y: BigRational) -> Vec2 {
     Vec2::new(x, y)
 }
 
@@ -188,11 +215,11 @@ pub fn v2(x: N64, y: N64) -> Vec2 {
 /// with a negative length and a vector in the opposite direction of positive
 /// length. Such distinctions are necessary when describing the normal distance
 /// between `PlacedShape`s.
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct DirVec2 {
     dir: Vec2,
-    len: N64,
+    len: BigRational,
 }
 
 #[allow(clippy::len_without_is_empty)]
@@ -200,7 +227,7 @@ impl DirVec2 {
     /// Constructs a vector with the given direction `dir` and length `len`.
     ///
     /// `dir` is normalized before being set.
-    pub fn new(dir: Vec2, len: N64) -> DirVec2 {
+    pub fn new(dir: Vec2, len: BigRational) -> DirVec2 {
         DirVec2 {
             dir: dir.normalize().unwrap(),
             len,
@@ -215,7 +242,7 @@ impl DirVec2 {
 
     /// Returns the length of the vector.  May be positive or negative.
     #[inline]
-    pub fn len(&self) -> N64 {
+    pub fn len(&self) -> BigRational {
         self.len
     }
 
@@ -243,21 +270,16 @@ mod tests {
     use super::*;
 
     #[cfg(feature = "enable_serde")]
-    use std::f64;
-
-    #[cfg(feature = "enable_serde")]
     use bincode::{deserialize, serialize};
 
     #[cfg(feature = "enable_serde")]
     #[test]
     fn test_serde_vec_2() {
         let elements = [
-            n64(-f64::INFINITY),
-            n64(-13.5),
-            n64(-0.0),
-            n64(0.0),
-            n64(12.3),
-            n64(f64::INFINITY),
+            BigRational::from_float(-13.5).unwrap(),
+            BigRational::from_float(-0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(12.3).unwrap(),
         ];
         for x in elements.iter() {
             for y in elements.iter() {

@@ -15,11 +15,11 @@
 use crate::core::dur_hitbox::DurHitbox;
 use crate::core::events::{EventKey, EventKeysMap, EventManager, InternalEvent};
 use crate::core::grid::Grid;
-use crate::core::{HbGroup, HbId, HbProfile, HbVel, Hitbox, HIGH_TIME};
+use crate::core::{HbGroup, HbId, HbProfile, HbVel, Hitbox};
 use crate::geom::PlacedShape;
 use crate::util::TightSet;
 use fnv::FnvHashMap;
-use noisy_float::prelude::*;
+use num::BigRational;
 use std::mem;
 
 #[cfg(feature = "enable_serde")]
@@ -37,9 +37,9 @@ use self::serde::*;
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Collider<P: HbProfile> {
     hitboxes: FnvHashMap<HbId, HitboxInfo<P>>,
-    time: N64,
+    time: BigRational,
     grid: Grid,
-    padding: N64,
+    padding: BigRational,
     events: EventManager,
 }
 
@@ -64,12 +64,15 @@ impl<P: HbProfile> Collider<P> {
     ///
     /// Another restriction introduced by `padding` is that hitboxes are not
     /// allowed to have a width or height smaller than `padding`.
-    pub fn new(cell_width: N64, padding: N64) -> Collider<P> {
+    pub fn new(cell_width: BigRational, padding: BigRational) -> Collider<P> {
         assert!(cell_width > padding, "requires cell_width > padding");
-        assert!(padding > n64(0.0), "requires padding > 0.0");
+        assert!(
+            padding > BigRational::from_float(0.0).unwrap(),
+            "requires padding > 0.0"
+        );
         Collider {
             hitboxes: FnvHashMap::default(),
-            time: n64(0.0),
+            time: BigRational::from_float(0.0).unwrap(),
             grid: Grid::new(cell_width),
             padding,
             events: EventManager::new(),
@@ -77,7 +80,7 @@ impl<P: HbProfile> Collider<P> {
     }
 
     /// Returns the current simulation time.
-    pub fn time(&self) -> N64 {
+    pub fn time(&self) -> BigRational {
         self.time
     }
 
@@ -90,7 +93,7 @@ impl<P: HbProfile> Collider<P> {
     /// `self.time()` again.
     ///
     /// This is a fast constant-time operation.  The result may be infinity.
-    pub fn next_time(&self) -> N64 {
+    pub fn next_time(&self) -> BigRational {
         self.events.peek_time()
     }
 
@@ -102,14 +105,9 @@ impl<P: HbProfile> Collider<P> {
     ///
     /// The hitboxes are updated implicitly, and this is actually a
     /// fast constant-time operation.
-    pub fn set_time(&mut self, time: N64) {
+    pub fn set_time(&mut self, time: BigRational) {
         assert!(time >= self.time, "cannot rewind time");
         assert!(time <= self.next_time(), "time must not exceed next_time()");
-        assert!(
-            time < n64(HIGH_TIME),
-            "time must not exceed {}",
-            n64(HIGH_TIME)
-        );
         self.time = time;
     }
 
@@ -193,8 +191,8 @@ impl<P: HbProfile> Collider<P> {
         id_2: HbId,
         hb_2: &mut HitboxInfo<P>,
         events: &mut EventManager,
-        time: N64,
-        padding: N64,
+        time: BigRational,
+        padding: BigRational,
     ) {
         assert!(hb_1.overlaps.insert(id_2));
         assert!(hb_2.overlaps.insert(id_1));
@@ -357,7 +355,7 @@ impl<P: HbProfile> Collider<P> {
                     let other_info = self.hitboxes.get_mut(&other_id).unwrap();
                     if info.profile.can_interact(&other_info.profile) {
                         let delay = new_hitbox.collide_time(&other_info.hitbox_at_time(self.time));
-                        if old_hitbox.is_none() && delay == n64(0.0) {
+                        if old_hitbox.is_none() && delay == BigRational::from_float(0.0).unwrap() {
                             result.push(other_info.profile);
                             Collider::process_collision(
                                 id,
@@ -464,14 +462,14 @@ impl<P: HbProfile> EventKeysMap for FnvHashMap<HbId, HitboxInfo<P>> {
 struct HitboxInfo<P: HbProfile> {
     profile: P,
     hitbox: Hitbox,
-    start_time: N64,
-    pub_end_time: N64,
+    start_time: BigRational,
+    pub_end_time: BigRational,
     event_keys: TightSet<EventKey>,
     overlaps: TightSet<HbId>,
 }
 
 impl<P: HbProfile> HitboxInfo<P> {
-    fn new(hitbox: Hitbox, profile: P, start_time: N64) -> HitboxInfo<P> {
+    fn new(hitbox: Hitbox, profile: P, start_time: BigRational) -> HitboxInfo<P> {
         HitboxInfo {
             profile,
             pub_end_time: hitbox.vel.end_time,
@@ -482,7 +480,7 @@ impl<P: HbProfile> HitboxInfo<P> {
         }
     }
 
-    fn hitbox_at_time(&self, time: N64) -> DurHitbox {
+    fn hitbox_at_time(&self, time: BigRational) -> DurHitbox {
         assert!(
             time >= self.start_time && time <= self.hitbox.vel.end_time,
             "invalid time"
@@ -492,7 +490,7 @@ impl<P: HbProfile> HitboxInfo<P> {
         result.to_dur_hitbox(time)
     }
 
-    fn pub_hitbox_at_time(&self, time: N64) -> Hitbox {
+    fn pub_hitbox_at_time(&self, time: BigRational) -> Hitbox {
         assert!(
             time >= self.start_time && time <= self.pub_end_time,
             "invalid time"

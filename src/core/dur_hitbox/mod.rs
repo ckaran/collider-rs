@@ -14,10 +14,9 @@
 
 mod solvers;
 
-use crate::core;
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
-use noisy_float::prelude::*;
+use num::BigRational;
 use std::f64;
 
 #[cfg(feature = "enable_serde")]
@@ -30,12 +29,12 @@ use self::serde::*;
 // rather than an `end_time` (time of the invalidation of the hitbox). This
 // new struct is meant to make that distinction clear.
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct DurHbVel {
     pub value: Vec2,
     pub resize: Vec2,
-    pub duration: N64,
+    pub duration: BigRational,
 }
 
 impl DurHbVel {
@@ -43,7 +42,7 @@ impl DurHbVel {
         DurHbVel {
             value: Vec2::zero(),
             resize: Vec2::zero(),
-            duration: n64(f64::INFINITY),
+            duration: BigRational::from_float(f64::INFINITY).unwrap(),
         }
     }
 
@@ -69,7 +68,7 @@ impl PlacedBounds for DurHbVel {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct DurHitbox {
     pub value: PlacedShape,
@@ -84,12 +83,7 @@ impl DurHitbox {
         }
     }
 
-    pub fn advanced_shape(&self, time: N64) -> PlacedShape {
-        assert!(
-            time < n64(core::HIGH_TIME),
-            "requires time < {}",
-            n64(core::HIGH_TIME)
-        );
+    pub fn advanced_shape(&self, time: BigRational) -> PlacedShape {
         self.value.advance(self.vel.value, self.vel.resize, time)
     }
 
@@ -97,7 +91,7 @@ impl DurHitbox {
         self.bounding_box_for(self.vel.duration)
     }
 
-    pub fn bounding_box_for(&self, duration: N64) -> PlacedShape {
+    pub fn bounding_box_for(&self, duration: BigRational) -> PlacedShape {
         if self.vel.is_still() {
             self.value.as_rect()
         } else {
@@ -106,11 +100,11 @@ impl DurHitbox {
         }
     }
 
-    pub fn collide_time(&self, other: &DurHitbox) -> N64 {
+    pub fn collide_time(&self, other: &DurHitbox) -> BigRational {
         solvers::collide_time(self, other)
     }
 
-    pub fn separate_time(&self, other: &DurHitbox, padding: N64) -> N64 {
+    pub fn separate_time(&self, other: &DurHitbox, padding: BigRational) -> BigRational {
         solvers::separate_time(self, other, padding)
     }
 }
@@ -138,11 +132,20 @@ mod tests {
     #[test]
     fn test_serde_dur_hitbox() {
         let mut original = DurHitbox::new(PlacedShape::new(
-            v2(n64(-11.0), n64(0.0)),
-            Shape::rect(v2(n64(2.0), n64(2.0))),
+            v2(
+                BigRational::from_float(-11.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            )),
         ));
-        original.vel.value = v2(n64(2.0), n64(0.0));
-        original.vel.duration = n64(100.0);
+        original.vel.value = v2(
+            BigRational::from_float(2.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        original.vel.duration = BigRational::from_float(100.0).unwrap();
 
         let serialized = serialize(&original).unwrap();
         let duplicate: DurHitbox = deserialize(&serialized).unwrap();
@@ -152,229 +155,452 @@ mod tests {
     #[test]
     fn test_rect_rect_collision() {
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(-11.0), n64(0.0)),
-            Shape::rect(v2(n64(2.0), n64(2.0))),
+            v2(
+                BigRational::from_float(-11.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            )),
         ));
-        a.vel.value = v2(n64(2.0), n64(0.0));
-        a.vel.duration = n64(100.0);
+        a.vel.value = v2(
+            BigRational::from_float(2.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(12.0), n64(2.0)),
-            Shape::rect(v2(n64(2.0), n64(4.0))),
+            v2(
+                BigRational::from_float(12.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            )),
         ));
-        b.vel.value = v2(n64(-0.5), n64(0.0));
-        b.vel.resize = v2(n64(1.0), n64(0.0));
-        b.vel.duration = n64(100.0);
-        assert_eq!(a.collide_time(&b), n64(7.0));
-        assert_eq!(b.collide_time(&a), n64(7.0));
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(-0.5).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        b.vel.resize = v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert_eq!(a.collide_time(&b), BigRational::from_float(7.0).unwrap());
+        assert_eq!(b.collide_time(&a), BigRational::from_float(7.0).unwrap());
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(0.0).unwrap()
+        );
     }
 
     #[test]
     fn test_circle_circle_collision() {
-        let sqrt2 = n64(2.0).sqrt();
+        let sqrt2 = BigRational::from_float(2.0).unwrap().sqrt();
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(-0.1) * sqrt2, n64(0.0)),
-            Shape::circle(n64(2.0)),
+            v2(
+                BigRational::from_float(-0.1).unwrap() * sqrt2,
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(2.0).unwrap()),
         ));
-        a.vel.value = v2(n64(0.1), n64(0.0));
-        a.vel.duration = n64(100.0);
+        a.vel.value = v2(
+            BigRational::from_float(0.1).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(3.0) * sqrt2, n64(0.0)),
-            Shape::circle(n64(2.0) + sqrt2 * n64(0.1)),
+            v2(
+                BigRational::from_float(3.0).unwrap() * sqrt2,
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::circle(
+                BigRational::from_float(2.0).unwrap()
+                    + sqrt2 * BigRational::from_float(0.1).unwrap(),
+            ),
         ));
-        b.vel.value = v2(n64(-2.0), n64(1.0));
-        b.vel.resize = v2(n64(-0.1), n64(-0.1));
-        b.vel.duration = n64(100.0);
-        assert!((a.collide_time(&b) - sqrt2).abs() < n64(1e-7));
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(-2.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+        );
+        b.vel.resize = v2(
+            BigRational::from_float(-0.1).unwrap(),
+            BigRational::from_float(-0.1).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert!((a.collide_time(&b) - sqrt2).abs() < BigRational::from_float(1e-7));
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(0.0).unwrap()
+        );
     }
 
     #[test]
     fn test_rect_circle_collision() {
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(-11.0), n64(0.0)),
-            Shape::circle(n64(2.0)),
+            v2(
+                BigRational::from_float(-11.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(2.0).unwrap()),
         ));
-        a.vel.value = v2(n64(2.0), n64(0.0));
-        a.vel.duration = n64(100.0);
+        a.vel.value = v2(
+            BigRational::from_float(2.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(12.0), n64(2.0)),
-            Shape::rect(v2(n64(2.0), n64(4.0))),
+            v2(
+                BigRational::from_float(12.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            )),
         ));
-        b.vel.value = v2(n64(-1.0), n64(0.0));
-        b.vel.duration = n64(100.0);
-        assert_eq!(a.collide_time(&b), n64(7.0));
-        assert_eq!(b.collide_time(&a), n64(7.0));
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(-1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert_eq!(a.collide_time(&b), BigRational::from_float(7.0).unwrap());
+        assert_eq!(b.collide_time(&a), BigRational::from_float(7.0).unwrap());
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(0.0).unwrap()
+        );
     }
 
     #[test]
     fn test_rect_circle_angled_collision() {
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(0.), n64(0.)),
-            Shape::square(n64(2.)),
+            v2(
+                BigRational::from_float(0.).unwrap(),
+                BigRational::from_float(0.).unwrap(),
+            ),
+            Shape::square(BigRational::from_float(2.).unwrap()),
         ));
-        a.vel.duration = n64(100.0);
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(5.), n64(5.)),
-            Shape::circle(n64(2.)),
+            v2(
+                BigRational::from_float(5.).unwrap(),
+                BigRational::from_float(5.).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(2.).unwrap()),
         ));
-        b.vel.value = v2(n64(-1.), n64(-1.));
-        b.vel.duration = n64(100.0);
+        b.vel.value = v2(
+            BigRational::from_float(-1.).unwrap(),
+            BigRational::from_float(-1.).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
         let collide_time = a.collide_time(&b);
-        let expected_time = n64(4.) - n64(1.) / n64(2.0).sqrt();
+        let expected_time = BigRational::from_float(4.).unwrap()
+            - BigRational::from_float(1.).unwrap() / BigRational::from_float(2.0).unwrap().sqrt();
         assert_eq!(collide_time, expected_time);
     }
 
     #[test]
     fn test_rect_rect_separation() {
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(0.0), n64(0.0)),
-            Shape::rect(v2(n64(6.0), n64(4.0))),
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(6.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            )),
         ));
-        a.vel.value = v2(n64(1.0), n64(1.0));
-        a.vel.duration = n64(100.0);
+        a.vel.value = v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+        );
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(1.0), n64(0.0)),
-            Shape::rect(v2(n64(4.0), n64(4.0))),
+            v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(4.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            )),
         ));
-        b.vel.value = v2(n64(0.5), n64(0.0));
-        b.vel.duration = n64(100.0);
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(4.1));
-        assert_eq!(b.separate_time(&a, n64(0.1)), n64(4.1));
-        assert_eq!(a.collide_time(&b), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(0.5).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(4.1).unwrap()
+        );
+        assert_eq!(
+            b.separate_time(&a, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(4.1).unwrap()
+        );
+        assert_eq!(a.collide_time(&b), BigRational::from_float(0.0).unwrap());
     }
 
     #[test]
     fn test_circle_circle_separation() {
-        let sqrt2 = n64(2.0).sqrt();
+        let sqrt2 = BigRational::from_float(2.0).unwrap().sqrt();
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(2.0), n64(5.0)),
-            Shape::circle(n64(2.0)),
+            v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(5.0).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(2.0).unwrap()),
         ));
-        a.vel.duration = n64(100.0);
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(3.0), n64(4.0)),
-            Shape::circle(n64(1.8)),
+            v2(
+                BigRational::from_float(3.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(1.8).unwrap()),
         ));
-        b.vel.value = v2(n64(-1.0), n64(1.0));
-        b.vel.duration = n64(100.0);
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(1.0) + sqrt2);
-        assert_eq!(b.separate_time(&a, n64(0.1)), n64(1.0) + sqrt2);
-        assert_eq!(a.collide_time(&b), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(-1.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(1.0).unwrap() + sqrt2
+        );
+        assert_eq!(
+            b.separate_time(&a, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(1.0).unwrap() + sqrt2
+        );
+        assert_eq!(a.collide_time(&b), BigRational::from_float(0.0).unwrap());
     }
 
     #[test]
     fn test_rect_circle_separation() {
-        let sqrt2 = n64(2.0).sqrt();
+        let sqrt2 = BigRational::from_float(2.0).unwrap().sqrt();
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(4.0), n64(2.0)),
-            Shape::rect(v2(n64(4.0), n64(6.0))),
+            v2(
+                BigRational::from_float(4.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(4.0).unwrap(),
+                BigRational::from_float(6.0).unwrap(),
+            )),
         ));
-        a.vel.duration = n64(100.0);
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(3.0), n64(4.0)),
-            Shape::circle(n64(3.8)),
+            v2(
+                BigRational::from_float(3.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(3.8).unwrap()),
         ));
-        b.vel.value = v2(n64(-1.0), n64(1.0));
-        b.vel.duration = n64(100.0);
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(1.0) + sqrt2);
-        assert_eq!(b.separate_time(&a, n64(0.1)), n64(1.0) + sqrt2);
-        assert_eq!(a.collide_time(&b), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(-1.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(1.0).unwrap() + sqrt2
+        );
+        assert_eq!(
+            b.separate_time(&a, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(1.0).unwrap() + sqrt2
+        );
+        assert_eq!(a.collide_time(&b), BigRational::from_float(0.0).unwrap());
     }
 
     #[test]
     fn test_rect_circle_angled_separation() {
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(0.), n64(0.)),
-            Shape::square(n64(2.)),
+            v2(
+                BigRational::from_float(0.).unwrap(),
+                BigRational::from_float(0.).unwrap(),
+            ),
+            Shape::square(BigRational::from_float(2.).unwrap()),
         ));
-        a.vel.duration = n64(100.0);
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(-1.), n64(1.)),
-            Shape::circle(n64(2.)),
+            v2(
+                BigRational::from_float(-1.).unwrap(),
+                BigRational::from_float(1.).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(2.).unwrap()),
         ));
-        b.vel.value = v2(n64(1.), n64(-1.));
-        b.vel.duration = n64(100.0);
-        let separate_time = a.separate_time(&b, n64(0.1));
-        let expected_time = n64(2.) + n64(1.1) / n64(2.0).sqrt();
+        b.vel.value = v2(
+            BigRational::from_float(1.).unwrap(),
+            BigRational::from_float(-1.).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        let separate_time = a.separate_time(&b, BigRational::from_float(0.1).unwrap());
+        let expected_time = BigRational::from_float(2.).unwrap()
+            + BigRational::from_float(1.1).unwrap() / BigRational::from_float(2.0).unwrap().sqrt();
         assert_eq!(separate_time, expected_time);
     }
 
     #[test]
     fn test_no_collision() {
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(-11.0), n64(0.0)),
-            Shape::rect(v2(n64(2.0), n64(2.0))),
+            v2(
+                BigRational::from_float(-11.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            )),
         ));
-        a.vel.value = v2(n64(2.0), n64(0.0));
-        a.vel.duration = n64(100.0);
+        a.vel.value = v2(
+            BigRational::from_float(2.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(12.0), n64(2.0)),
-            Shape::rect(v2(n64(2.0), n64(4.0))),
+            v2(
+                BigRational::from_float(12.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            )),
         ));
-        b.vel.value = v2(n64(-1.0), n64(1.0));
-        b.vel.duration = n64(100.0);
-        assert_eq!(a.collide_time(&b), n64(f64::INFINITY));
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(-1.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert_eq!(
+            a.collide_time(&b),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(0.0).unwrap()
+        );
 
-        b.value.shape = Shape::circle(n64(2.0));
+        b.value.shape = Shape::circle(BigRational::from_float(2.0).unwrap());
         b.vel.resize = Vec2::zero();
-        assert_eq!(a.collide_time(&b), n64(f64::INFINITY));
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(0.0));
+        assert_eq!(
+            a.collide_time(&b),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(0.0).unwrap()
+        );
 
-        a.value.shape = Shape::circle(n64(2.0));
+        a.value.shape = Shape::circle(BigRational::from_float(2.0).unwrap());
         a.vel.resize = Vec2::zero();
-        assert_eq!(a.collide_time(&b), n64(f64::INFINITY));
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(0.0));
+        assert_eq!(
+            a.collide_time(&b),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(0.0).unwrap()
+        );
     }
 
     #[test]
     fn test_no_separation() {
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(5.0), n64(1.0)),
-            Shape::rect(v2(n64(2.0), n64(2.0))),
+            v2(
+                BigRational::from_float(5.0).unwrap(),
+                BigRational::from_float(1.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+            )),
         ));
-        a.vel.value = v2(n64(2.0), n64(1.0));
-        a.vel.duration = n64(100.0);
+        a.vel.value = v2(
+            BigRational::from_float(2.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+        );
+        a.vel.duration = BigRational::from_float(100.0).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(5.0), n64(1.0)),
-            Shape::rect(v2(n64(2.0), n64(4.0))),
+            v2(
+                BigRational::from_float(5.0).unwrap(),
+                BigRational::from_float(1.0).unwrap(),
+            ),
+            Shape::rect(v2(
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            )),
         ));
-        b.vel.value = v2(n64(2.0), n64(1.0));
-        b.vel.duration = n64(100.0);
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(f64::INFINITY));
-        assert_eq!(a.collide_time(&b), n64(0.0));
+        b.vel.value = v2(
+            BigRational::from_float(2.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+        );
+        b.vel.duration = BigRational::from_float(100.0).unwrap();
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        assert_eq!(a.collide_time(&b), BigRational::from_float(0.0).unwrap());
 
-        b.value.shape = Shape::circle(n64(2.0));
+        b.value.shape = Shape::circle(BigRational::from_float(2.0).unwrap());
         b.vel.resize = Vec2::zero();
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(f64::INFINITY));
-        assert_eq!(a.collide_time(&b), n64(0.0));
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        assert_eq!(a.collide_time(&b), BigRational::from_float(0.0).unwrap());
 
-        a.value.shape = Shape::circle(n64(2.0));
+        a.value.shape = Shape::circle(BigRational::from_float(2.0).unwrap());
         a.vel.resize = Vec2::zero();
-        assert_eq!(a.separate_time(&b, n64(0.1)), n64(f64::INFINITY));
-        assert_eq!(a.collide_time(&b), n64(0.0));
+        assert_eq!(
+            a.separate_time(&b, BigRational::from_float(0.1).unwrap()),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        assert_eq!(a.collide_time(&b), BigRational::from_float(0.0).unwrap());
     }
 
     #[test]
     fn test_low_duration() {
-        let sqrt2 = n64(2.0).sqrt();
+        let sqrt2 = BigRational::from_float(2.0).unwrap().sqrt();
         let mut a = DurHitbox::new(PlacedShape::new(
-            v2(n64(0.0), n64(0.0)),
-            Shape::circle(n64(2.0)),
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(2.0).unwrap()),
         ));
-        a.vel.duration = n64(4.0) - sqrt2 + n64(0.01);
+        a.vel.duration =
+            BigRational::from_float(4.0).unwrap() - sqrt2 + BigRational::from_float(0.01).unwrap();
         let mut b = DurHitbox::new(PlacedShape::new(
-            v2(n64(4.0), n64(4.0)),
-            Shape::circle(n64(2.0)),
+            v2(
+                BigRational::from_float(4.0).unwrap(),
+                BigRational::from_float(4.0).unwrap(),
+            ),
+            Shape::circle(BigRational::from_float(2.0).unwrap()),
         ));
-        b.vel.value = v2(n64(-1.0), n64(-1.0));
-        b.vel.duration = n64(4.0) - sqrt2 + n64(0.01);
-        assert_eq!(a.collide_time(&b), n64(4.0) - sqrt2);
-        a.vel.duration -= n64(0.02);
-        assert_eq!(a.collide_time(&b), n64(f64::INFINITY));
-        b.vel.duration -= n64(0.02);
-        assert_eq!(a.collide_time(&b), n64(f64::INFINITY));
+        b.vel.value = v2(
+            BigRational::from_float(-1.0).unwrap(),
+            BigRational::from_float(-1.0).unwrap(),
+        );
+        b.vel.duration =
+            BigRational::from_float(4.0).unwrap() - sqrt2 + BigRational::from_float(0.01).unwrap();
+        assert_eq!(
+            a.collide_time(&b),
+            BigRational::from_float(4.0).unwrap() - sqrt2
+        );
+        a.vel.duration -= BigRational::from_float(0.02).unwrap();
+        assert_eq!(
+            a.collide_time(&b),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        b.vel.duration -= BigRational::from_float(0.02).unwrap();
+        assert_eq!(
+            a.collide_time(&b),
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
     }
 }

@@ -19,20 +19,184 @@ use self::serde::*;
 
 pub use self::one_or_two::OneOrTwo;
 use fnv::FnvHashSet;
-use noisy_float::prelude::*;
+use num::{BigInt, BigRational, One, Signed, Zero};
 use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
 use std::hash::Hash;
 
-// returns the ascending root of a quadratic polynomial ax^2 + bx + c
-pub fn quad_root_ascending(a: N64, b: N64, c: N64) -> Option<N64> {
-    let determinant = b * b - a * c * n64(4.0);
-    if determinant <= n64(0.0) {
-        None
-    } else if b >= n64(0.0) {
-        Some((c * n64(2.0)) / (-b - determinant.sqrt()))
+/// # Calculates the approximate square root of the value
+///
+/// Calculates the approximate square root of `value`.  If the returned value is
+/// `Ok(_)`, then it is guaranteed to be within `epsilon` of the actual
+/// answer.  If `epsilon <= 0.0`, then `Err` is returned (the reason for the
+/// bound of `0.0` is because the approximation algorithm is unable to return an
+/// exact answer).  If `value < 0.0`, then `Err` is returned (`BigRational` is
+/// a real valued object; it cannot represent complex values).  In both `Err`
+/// cases, the value will be a `String` explaining what the error actually is.
+///
+/// # Parameters
+///
+/// - `value` - The value whose approximate square root you wish to obtain.  If
+///     this is less than `0.0`, then `Err` will be returned.
+/// - `epsilon` - The maximum acceptable difference between the returned value
+///     and the actual value.  The returned value is in the range
+///     `[actual - epsilon, actual + epsilon]`.
+///
+/// # Returns
+///
+/// If everything went as expected, then `Ok(_)` will be returned, containing
+/// a value that is within `± epsilon` of the actual value.  If anything went
+/// wrong, then `Err(_)` will be returned, containing a `String` outlining what
+/// the problem was.
+pub fn approx_square_root(value: BigRational, epsilon: BigRational) -> Result<BigRational, String> {
+    if value < BigRational::zero() {
+        return Err(format!(
+            "approx_square_root() cannot calculate the square \
+             root of negative values.  value = {}",
+            value
+        )
+        .to_owned());
+    } else if epsilon <= BigRational::zero() {
+        return Err(format!(
+            "approx_square_root() cannot calculate the square \
+             root with a non-positive epsilon.  \
+             epsilon = {}",
+            epsilon
+        )
+        .to_owned());
+    }
+
+    // I'm going to use the Babylonian method to find the square root.  This is
+    // described at
+    // https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
+    // To do so, I need to have an initial seed value that is the approximate
+    // square root.  This will estimate will be refined until it is within
+    // epsilon of the real value.
+
+    // Calculates seed values for all values >= 1.0.  This is used below when
+    // calculating the seed value.
+    #[inline]
+    fn calc_seed(value: &BigRational) -> BigRational {
+        let bits = value.ceil().to_integer().bits();
+        let half_bits = bits / 2;
+        let approximate = BigInt::one() << half_bits;
+        BigRational::from_integer(approximate)
+    };
+
+    let mut x = if value >= BigRational::one() {
+        calc_seed(&value)
     } else {
-        Some((-b + determinant.sqrt()) / (a * n64(2.0)))
+        // Because the value is less than one, I can't use the trick above
+        // directly.  Instead, I'm going to find the reciprocal, and then do the
+        // trick above, and then use the reciprocal of that as the seed.
+        calc_seed(&(value.recip())).recip()
+    };
+
+    // We now have an initial seed.  Time to refine it until it is within
+    // epsilon of the real value.  I'm creating two different inlined functions
+    // to make it easier to do the calculations.
+
+    #[inline]
+    fn calc_next_x(value: BigRational, x: BigRational) -> BigRational {
+        let two = BigRational::one() + BigRational::one();
+        (x + (value / x)) / two
+    };
+
+    #[inline]
+    fn calc_approx_error(value: BigRational, x: BigRational) -> BigRational {
+        let two = BigRational::one() + BigRational::one();
+        ((value - (x * x)) / (x * two)).abs()
+    }
+
+    while calc_approx_error(value, x) > epsilon {
+        x = calc_next_x(value, x);
+    }
+
+    Ok(x)
+}
+
+/// # Calculates an approximation to the sine function
+///
+/// This function calculations an approximation to the sine function.  The angle
+/// must be in radians.  The returned result will be within the range
+/// `[actual - epsilon, actual + epsilon]`, where `actual` is the actual sine
+/// of the angle.  `epsilon` must be a positive value; other values lead to
+/// errors.
+///
+/// # Parameters
+///
+/// - `angle` - The angle for which you want the sine value.  This is treated as
+///     being in radians.
+/// - `epsilon` - The maximum acceptable difference between the returned value
+///     and the actual value.  The returned value is in the range
+///     `[actual - epsilon, actual + epsilon]`.
+///
+/// # Returns
+///
+/// If `epsilon > 0.0`, then the sine of `angle` is returned within an `Ok(_)`
+/// variant.  Otherwise an error string is returned.
+pub fn approx_sine(angle: BigRational, epsilon: BigRational) -> Result<BigRational, String> {
+    // FIXME: I know that I should use the CORDIC algorithm to calculate this
+    // correctly, but I don't have time to do that right now.  So, references,
+    // followed by a hack
+    //
+    // https://pdfs.semanticscholar.org/f2a6/eef864d928b462ca2d9f7db19b4078584bf4.pdf
+    // https://people.clas.ufl.edu/bruceedwards/files/paper.pdf
+    // https://en.wikipedia.org/wiki/Trigonometric_functions#Basic_identities
+    // https://en.wikipedia.org/wiki/CORDIC
+
+    unimplemented!("Cem, you forgot to finish this!");
+}
+
+/// # Calculates an approximation to the cosine function
+///
+/// This function calculations an approximation to the cosine function.  The
+/// angle must be in radians.  The returned result will be within the range
+/// `[actual - epsilon, actual + epsilon]`, where `actual` is the actual cosine
+/// of the angle.  `epsilon` must be a positive value; other values lead to
+/// errors.
+///
+/// # Parameters
+///
+/// - `angle` - The angle for which you want the cosine value.  This is treated
+///     as being in radians.
+/// - `epsilon` - The maximum acceptable difference between the returned value
+///     and the actual value.  The returned value is in the range
+///     `[actual - epsilon, actual + epsilon]`.
+///
+/// # Returns
+///
+/// If `epsilon > 0.0`, then the cosine of `angle` is returned within an `Ok(_)`
+/// variant.  Otherwise an error string is returned.
+pub fn approx_cosine(angle: BigRational, epsilon: BigRational) -> Result<BigRational, String> {
+    // FIXME: I know that I should use the CORDIC algorithm to calculate this
+    // correctly, but I don't have time to do that right now.  So, references,
+    // followed by a hack
+    //
+    // https://pdfs.semanticscholar.org/f2a6/eef864d928b462ca2d9f7db19b4078584bf4.pdf
+    // https://people.clas.ufl.edu/bruceedwards/files/paper.pdf
+    // https://en.wikipedia.org/wiki/Trigonometric_functions#Basic_identities
+    // https://en.wikipedia.org/wiki/CORDIC
+
+    unimplemented!("Cem, you forgot to finish this!");
+}
+
+// returns the ascending root of a quadratic polynomial ax^2 + bx + c
+pub fn quad_root_ascending(a: BigRational, b: BigRational, c: BigRational) -> Option<BigRational> {
+    let determinant = b * b - a * c * BigRational::from_float(4.0).unwrap();
+    let epsilon = determinant / BigRational::from_float(1000000.0).unwrap();
+    if determinant <= BigRational::from_float(0.0).unwrap() {
+        None
+    } else if b >= BigRational::from_float(0.0).unwrap() {
+        Some(
+            (c * BigRational::from_float(2.0).unwrap())
+                / (-b - approx_square_root(determinant, epsilon).unwrap()),
+        )
+    } else {
+        Some(
+            (-b + approx_square_root(determinant, epsilon).unwrap())
+                / (a * BigRational::from_float(2.0).unwrap()),
+        )
     }
 }
 
@@ -161,21 +325,56 @@ mod tests {
     #[test]
     fn test_quad_root_ascending() {
         assert!(
-            (quad_root_ascending(n64(1e-14), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs()
-                < n64(1e-7)
-        );
-        assert!(
-            (quad_root_ascending(n64(0.0), n64(2.0), n64(-1.0)).unwrap() - n64(0.5)).abs()
-                < n64(1e-7)
-        );
-        assert!(
-            (quad_root_ascending(n64(100.0), n64(-1.0), n64(-1e-16)).unwrap() - n64(0.01)).abs()
-                < n64(1e-7)
-        );
-        assert!(quad_root_ascending(n64(0.0), n64(-2.0), n64(1.0))
+            (quad_root_ascending(
+                BigRational::from_float(1e-14).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(-1.0).unwrap()
+            )
             .unwrap()
-            .is_infinite());
-        assert!(quad_root_ascending(n64(-3.0), n64(0.0), n64(-1.0)).is_none());
-        assert!(quad_root_ascending(n64(1.0), n64(1.0), n64(1.0)).is_none());
+                - BigRational::from_float(0.5).unwrap())
+            .abs()
+                < BigRational::from_float(1e-7)
+        );
+        assert!(
+            (quad_root_ascending(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(2.0).unwrap(),
+                BigRational::from_float(-1.0).unwrap()
+            )
+            .unwrap()
+                - BigRational::from_float(0.5).unwrap())
+            .abs()
+                < BigRational::from_float(1e-7)
+        );
+        assert!(
+            (quad_root_ascending(
+                BigRational::from_float(100.0).unwrap(),
+                BigRational::from_float(-1.0).unwrap(),
+                BigRational::from_float(-1e-16).unwrap()
+            )
+            .unwrap()
+                - BigRational::from_float(0.01).unwrap())
+            .abs()
+                < BigRational::from_float(1e-7)
+        );
+        assert!(quad_root_ascending(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(-2.0).unwrap(),
+            BigRational::from_float(1.0).unwrap()
+        )
+        .unwrap()
+        .is_infinite());
+        assert!(quad_root_ascending(
+            BigRational::from_float(-3.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(-1.0).unwrap()
+        )
+        .is_none());
+        assert!(quad_root_ascending(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(1.0).unwrap()
+        )
+        .is_none());
     }
 }

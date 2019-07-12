@@ -18,7 +18,7 @@ use crate::geom::shape::{PlacedBounds, PlacedShape};
 use crate::index_rect::IndexRect;
 use crate::util::TightSet;
 use fnv::{FnvHashMap, FnvHashSet};
-use noisy_float::prelude::*;
+use num::{BigRational, ToPrimitive};
 use std::cmp;
 use std::collections::hash_map;
 use std::f64;
@@ -57,27 +57,27 @@ impl GridArea {
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Grid {
     map: FnvHashMap<GridKey, TightSet<HbId>>,
-    cell_width: N64,
+    cell_width: BigRational,
 }
 
 impl Grid {
-    pub fn new(cell_width: N64) -> Grid {
+    pub fn new(cell_width: BigRational) -> Grid {
         Grid {
             map: FnvHashMap::default(),
             cell_width,
         }
     }
 
-    pub fn cell_period(&self, hitbox: &Hitbox, has_group: bool) -> N64 {
+    pub fn cell_period(&self, hitbox: &Hitbox, has_group: bool) -> BigRational {
         if has_group {
             let speed = hitbox.vel.max_edge();
-            if speed <= n64(0.0) {
-                n64(f64::INFINITY)
+            if speed <= BigRational::from_float(0.0).unwrap() {
+                BigRational::from_float(f64::INFINITY).unwrap()
             } else {
                 self.cell_width / speed
             }
         } else {
-            n64(f64::INFINITY)
+            BigRational::from_float(f64::INFINITY).unwrap()
         }
     }
 
@@ -109,14 +109,30 @@ impl Grid {
     }
 
     fn index_bounds(&self, bounds: &PlacedShape) -> IndexRect {
-        let start_x = (bounds.min_x() / self.cell_width).floor().raw() as i32;
-        let start_y = (bounds.min_y() / self.cell_width).floor().raw() as i32;
+        let start_x = (bounds.min_x() / self.cell_width)
+            .floor()
+            .to_integer()
+            .to_i32()
+            .unwrap();
+        let start_y = (bounds.min_y() / self.cell_width)
+            .floor()
+            .to_integer()
+            .to_i32()
+            .unwrap();
         let end_x = cmp::max(
-            (bounds.max_x() / self.cell_width).ceil().raw() as i32,
+            (bounds.max_x() / self.cell_width)
+                .ceil()
+                .to_integer()
+                .to_i32()
+                .unwrap(),
             start_x + 1,
         );
         let end_y = cmp::max(
-            (bounds.max_y() / self.cell_width).ceil().raw() as i32,
+            (bounds.max_y() / self.cell_width)
+                .ceil()
+                .to_integer()
+                .to_i32()
+                .unwrap(),
             start_y + 1,
         );
         IndexRect::new((start_x, start_y), (end_x, end_y))

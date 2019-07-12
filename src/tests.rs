@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use noisy_float::prelude::*;
-
 #[cfg(feature = "enable_serde")]
 extern crate serde;
 #[cfg(feature = "enable_serde")]
@@ -21,6 +19,7 @@ use self::serde::*;
 
 use super::{Collider, HbEvent, HbId, HbProfile, HbVel};
 use crate::geom::{v2, Shape};
+use num::BigRational;
 use std::f64;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
@@ -44,12 +43,12 @@ impl HbProfile for TestHbProfile {
     }
 }
 
-fn advance_to_event(collider: &mut Collider<TestHbProfile>, time: N64) {
+fn advance_to_event(collider: &mut Collider<TestHbProfile>, time: BigRational) {
     advance(collider, time);
     assert_eq!(collider.next_time(), collider.time());
 }
 
-fn advance(collider: &mut Collider<TestHbProfile>, time: N64) {
+fn advance(collider: &mut Collider<TestHbProfile>, time: BigRational) {
     while collider.time() < time {
         assert!(collider.next().is_none());
         let new_time = collider.next_time().min(time);
@@ -58,7 +57,7 @@ fn advance(collider: &mut Collider<TestHbProfile>, time: N64) {
     assert_eq!(collider.time(), time);
 }
 
-fn advance_through_events(collider: &mut Collider<TestHbProfile>, time: N64) {
+fn advance_through_events(collider: &mut Collider<TestHbProfile>, time: BigRational) {
     while collider.time() < time {
         collider.next();
         let new_time = collider.next_time().min(time);
@@ -74,88 +73,166 @@ fn sort(mut vector: Vec<TestHbProfile>) -> Vec<TestHbProfile> {
 
 #[test]
 fn smoke_test() {
-    let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+    let mut collider = Collider::<TestHbProfile>::new(
+        BigRational::from_float(4.0).unwrap(),
+        BigRational::from_float(0.25).unwrap(),
+    );
 
-    let mut hitbox = Shape::square(n64(2.0))
-        .place(v2(n64(-10.0), n64(0.0)))
+    let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
+        .place(v2(
+            BigRational::from_float(-10.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        ))
         .still();
-    hitbox.vel.value = v2(n64(1.0), n64(0.0));
+    hitbox.vel.value = v2(
+        BigRational::from_float(1.0).unwrap(),
+        BigRational::from_float(0.0).unwrap(),
+    );
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    let mut hitbox = Shape::circle(n64(2.0))
-        .place(v2(n64(10.0), n64(0.0)))
+    let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
+        .place(v2(
+            BigRational::from_float(10.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        ))
         .still();
-    hitbox.vel.value = v2(n64(-1.0), n64(0.0));
+    hitbox.vel.value = v2(
+        BigRational::from_float(-1.0).unwrap(),
+        BigRational::from_float(0.0).unwrap(),
+    );
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    advance_to_event(&mut collider, n64(9.0));
+    advance_to_event(&mut collider, BigRational::from_float(9.0).unwrap());
     assert_eq!(
         collider.next(),
         Some((HbEvent::Collide, 0.into(), 1.into()))
     );
-    advance_to_event(&mut collider, n64(11.125));
+    advance_to_event(&mut collider, BigRational::from_float(11.125).unwrap());
     assert_eq!(
         collider.next(),
         Some((HbEvent::Separate, 0.into(), 1.into()))
     );
-    advance(&mut collider, n64(23.0));
+    advance(&mut collider, BigRational::from_float(23.0).unwrap());
 }
 
 #[test]
 fn test_hitbox_updates() {
-    let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+    let mut collider = Collider::<TestHbProfile>::new(
+        BigRational::from_float(4.0).unwrap(),
+        BigRational::from_float(0.25).unwrap(),
+    );
 
-    let mut hitbox = Shape::square(n64(2.0))
-        .place(v2(n64(-10.0), n64(0.0)))
+    let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
+        .place(v2(
+            BigRational::from_float(-10.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        ))
         .still();
-    hitbox.vel.value = v2(n64(1.0), n64(0.0));
+    hitbox.vel.value = v2(
+        BigRational::from_float(1.0).unwrap(),
+        BigRational::from_float(0.0).unwrap(),
+    );
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert!(overlaps.is_empty());
 
-    let mut hitbox = Shape::circle(n64(2.0))
-        .place(v2(n64(10.0), n64(0.0)))
+    let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
+        .place(v2(
+            BigRational::from_float(10.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        ))
         .still();
-    hitbox.vel.value = v2(n64(1.0), n64(0.0));
+    hitbox.vel.value = v2(
+        BigRational::from_float(1.0).unwrap(),
+        BigRational::from_float(0.0).unwrap(),
+    );
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert!(overlaps.is_empty());
 
-    advance(&mut collider, n64(11.0));
+    advance(&mut collider, BigRational::from_float(11.0).unwrap());
 
     let mut hitbox = collider.get_hitbox(0);
     assert_eq!(
         hitbox.value,
-        Shape::square(n64(2.0)).place(v2(n64(1.0), n64(0.0)))
+        Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        ))
     );
-    assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
-    assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-    assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-    hitbox.value.pos = v2(n64(0.0), n64(2.0));
-    hitbox.vel.value = v2(n64(0.0), n64(-1.0));
+    assert_eq!(
+        hitbox.vel.value,
+        v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.resize,
+        v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.end_time,
+        BigRational::from_float(f64::INFINITY).unwrap()
+    );
+    hitbox.value.pos = v2(
+        BigRational::from_float(0.0).unwrap(),
+        BigRational::from_float(2.0).unwrap(),
+    );
+    hitbox.vel.value = v2(
+        BigRational::from_float(0.0).unwrap(),
+        BigRational::from_float(-1.0).unwrap(),
+    );
     let overlaps = collider.remove_hitbox(0);
     assert_eq!(overlaps, vec![]);
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    advance(&mut collider, n64(14.0));
+    advance(&mut collider, BigRational::from_float(14.0).unwrap());
 
     let mut hitbox = collider.get_hitbox(1);
     assert_eq!(
         hitbox.value,
-        Shape::circle(n64(2.0)).place(v2(n64(24.0), n64(0.0)))
+        Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
+            BigRational::from_float(24.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        ))
     );
-    assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
-    assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-    assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-    hitbox.value.pos = v2(n64(0.0), n64(-8.0));
-    hitbox.vel.value = v2(n64(0.0), n64(0.0));
+    assert_eq!(
+        hitbox.vel.value,
+        v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.resize,
+        v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.end_time,
+        BigRational::from_float(f64::INFINITY).unwrap()
+    );
+    hitbox.value.pos = v2(
+        BigRational::from_float(0.0).unwrap(),
+        BigRational::from_float(-8.0).unwrap(),
+    );
+    hitbox.vel.value = v2(
+        BigRational::from_float(0.0).unwrap(),
+        BigRational::from_float(0.0).unwrap(),
+    );
     let overlaps = collider.remove_hitbox(1);
     assert_eq!(overlaps, vec![]);
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    advance_to_event(&mut collider, n64(19.0));
+    advance_to_event(&mut collider, BigRational::from_float(19.0).unwrap());
 
     assert_eq!(
         collider.next(),
@@ -164,68 +241,134 @@ fn test_hitbox_updates() {
     let mut hitbox = collider.get_hitbox(0);
     assert_eq!(
         hitbox.value,
-        Shape::square(n64(2.0)).place(v2(n64(0.0), n64(-6.0)))
+        Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(-6.0).unwrap()
+        ))
     );
-    assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(-1.0)));
-    assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-    assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-    hitbox.vel.value = v2(n64(0.0), n64(0.0));
+    assert_eq!(
+        hitbox.vel.value,
+        v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(-1.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.resize,
+        v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.end_time,
+        BigRational::from_float(f64::INFINITY).unwrap()
+    );
+    hitbox.vel.value = v2(
+        BigRational::from_float(0.0).unwrap(),
+        BigRational::from_float(0.0).unwrap(),
+    );
     collider.set_hitbox_vel(0, hitbox.vel);
 
     let mut hitbox = collider.get_hitbox(1);
     assert_eq!(
         hitbox.value,
-        Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(-8.0)))
+        Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(-8.0).unwrap()
+        ))
     );
-    assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(0.0)));
-    assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-    assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-    hitbox.vel.value = v2(n64(0.0), n64(2.0));
+    assert_eq!(
+        hitbox.vel.value,
+        v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.resize,
+        v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap()
+        )
+    );
+    assert_eq!(
+        hitbox.vel.end_time,
+        BigRational::from_float(f64::INFINITY).unwrap()
+    );
+    hitbox.vel.value = v2(
+        BigRational::from_float(0.0).unwrap(),
+        BigRational::from_float(2.0).unwrap(),
+    );
     collider.set_hitbox_vel(1, hitbox.vel);
 
-    let hitbox = Shape::rect(v2(n64(2.0), n64(20.0)))
-        .place(v2(n64(0.0), n64(0.0)))
-        .still();
+    let hitbox = Shape::rect(v2(
+        BigRational::from_float(2.0).unwrap(),
+        BigRational::from_float(20.0).unwrap(),
+    ))
+    .place(v2(
+        BigRational::from_float(0.0).unwrap(),
+        BigRational::from_float(0.0).unwrap(),
+    ))
+    .still();
     assert_eq!(
         sort(collider.add_hitbox(2.into(), hitbox)),
         vec![0.into(), 1.into()]
     );
 
-    advance_to_event(&mut collider, n64(21.125));
+    advance_to_event(&mut collider, BigRational::from_float(21.125).unwrap());
 
     assert_eq!(
         collider.next(),
         Some((HbEvent::Separate, 0.into(), 1.into()))
     );
 
-    advance(&mut collider, n64(26.125));
+    advance(&mut collider, BigRational::from_float(26.125).unwrap());
 
     let overlaps = collider.remove_hitbox(1);
     assert_eq!(overlaps, vec![2.into()]);
 
-    advance(&mut collider, n64(37.125));
+    advance(&mut collider, BigRational::from_float(37.125).unwrap());
 }
 
 #[test]
 fn test_get_overlaps() {
-    let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+    let mut collider = Collider::<TestHbProfile>::new(
+        BigRational::from_float(4.0).unwrap(),
+        BigRational::from_float(0.25).unwrap(),
+    );
 
     collider.add_hitbox(
         0.into(),
-        Shape::square(n64(2.0))
-            .place(v2(n64(-10.0), n64(0.0)))
-            .moving(v2(n64(1.0), n64(0.0))),
+        Shape::square(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(-10.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
+            .moving(v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            )),
     );
     collider.add_hitbox(
         1.into(),
-        Shape::circle(n64(2.0))
-            .place(v2(n64(10.0), n64(0.0)))
-            .moving(v2(n64(-1.0), n64(0.0))),
+        Shape::circle(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(10.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
+            .moving(v2(
+                BigRational::from_float(-1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            )),
     );
     collider.add_hitbox(
         2.into(),
-        Shape::square(n64(2.0))
-            .place(v2(n64(0.0), n64(0.0)))
+        Shape::square(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
             .still(),
     );
 
@@ -237,7 +380,7 @@ fn test_get_overlaps() {
     assert!(!collider.is_overlapping(1, 2));
     assert!(!collider.is_overlapping(1, 0));
 
-    advance_through_events(&mut collider, n64(10.0));
+    advance_through_events(&mut collider, BigRational::from_float(10.0).unwrap());
 
     assert_eq!(sort(collider.get_overlaps(0)), vec![1.into(), 2.into()]);
     assert_eq!(sort(collider.get_overlaps(1)), vec![0.into(), 2.into()]);
@@ -247,8 +390,14 @@ fn test_get_overlaps() {
     assert!(collider.is_overlapping(1, 2));
     assert!(collider.is_overlapping(1, 0));
 
-    collider.set_hitbox_vel(1, HbVel::moving(v2(n64(1.0), n64(0.0))));
-    advance_through_events(&mut collider, n64(20.0));
+    collider.set_hitbox_vel(
+        1,
+        HbVel::moving(v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        )),
+    );
+    advance_through_events(&mut collider, BigRational::from_float(20.0).unwrap());
 
     assert_eq!(collider.get_overlaps(0), vec![1.into()]);
     assert_eq!(collider.get_overlaps(1), vec![0.into()]);
@@ -268,34 +417,55 @@ fn test_get_overlaps() {
 
 #[test]
 fn test_query_overlaps() {
-    let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+    let mut collider = Collider::<TestHbProfile>::new(
+        BigRational::from_float(4.0).unwrap(),
+        BigRational::from_float(0.25).unwrap(),
+    );
 
     collider.add_hitbox(
         0.into(),
-        Shape::square(n64(2.0))
-            .place(v2(n64(-5.0), n64(0.0)))
-            .moving(v2(n64(1.0), n64(0.0))),
+        Shape::square(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(-5.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
+            .moving(v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            )),
     );
     collider.add_hitbox(
         1.into(),
-        Shape::circle(n64(2.0))
-            .place(v2(n64(0.0), n64(0.0)))
+        Shape::circle(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
             .still(),
     );
     collider.add_hitbox(
         2.into(),
-        Shape::circle(n64(2.0))
-            .place(v2(n64(10.0), n64(0.0)))
-            .moving(v2(n64(-1.0), n64(0.0))),
+        Shape::circle(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(10.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
+            .moving(v2(
+                BigRational::from_float(-1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            )),
     );
 
-    let test_shape = Shape::circle(n64(2.0)).place(v2(n64(-1.0), n64(0.5)));
+    let test_shape = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
+        BigRational::from_float(-1.0).unwrap(),
+        BigRational::from_float(0.5).unwrap(),
+    ));
     assert_eq!(
         collider.query_overlaps(&test_shape, &5.into()),
         vec![1.into()]
     );
 
-    advance(&mut collider, n64(3.0));
+    advance(&mut collider, BigRational::from_float(3.0).unwrap());
     assert_eq!(
         sort(collider.query_overlaps(&test_shape, &5.into())),
         vec![0.into(), 1.into()]
@@ -304,28 +474,42 @@ fn test_query_overlaps() {
 
 #[test]
 fn test_separate_initial_overlap() {
-    let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+    let mut collider = Collider::<TestHbProfile>::new(
+        BigRational::from_float(4.0).unwrap(),
+        BigRational::from_float(0.25).unwrap(),
+    );
 
     let overlaps = collider.add_hitbox(
         0.into(),
-        Shape::square(n64(1.))
-            .place(v2(n64(0.), n64(0.)))
-            .moving(v2(n64(0.0), n64(1.))),
+        Shape::square(BigRational::from_float(1.).unwrap())
+            .place(v2(
+                BigRational::from_float(0.).unwrap(),
+                BigRational::from_float(0.).unwrap(),
+            ))
+            .moving(v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(1.).unwrap(),
+            )),
     );
     assert_eq!(overlaps, vec![]);
     let overlaps = collider.add_hitbox(
         1.into(),
-        Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).still(),
+        Shape::square(BigRational::from_float(1.).unwrap())
+            .place(v2(
+                BigRational::from_float(0.).unwrap(),
+                BigRational::from_float(0.).unwrap(),
+            ))
+            .still(),
     );
     assert_eq!(overlaps, vec![0.into()]);
 
-    advance_to_event(&mut collider, n64(1.25));
+    advance_to_event(&mut collider, BigRational::from_float(1.25).unwrap());
     assert_eq!(
         collider.next(),
         Some((HbEvent::Separate, 0.into(), 1.into()))
     );
 
-    advance(&mut collider, n64(1.5));
+    advance(&mut collider, BigRational::from_float(1.5).unwrap());
 }
 
 #[cfg(all(test, feature = "enable_serde"))]
@@ -335,7 +519,10 @@ pub(crate) mod test_serde {
 
     #[test]
     fn test_trivial() {
-        let collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+        let collider = Collider::<TestHbProfile>::new(
+            BigRational::from_float(4.0).unwrap(),
+            BigRational::from_float(0.25).unwrap(),
+        );
 
         let serialized = serialize(&collider).unwrap();
         let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
@@ -344,33 +531,48 @@ pub(crate) mod test_serde {
 
     #[test]
     fn smoke_test() {
-        let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+        let mut collider = Collider::<TestHbProfile>::new(
+            BigRational::from_float(4.0).unwrap(),
+            BigRational::from_float(0.25).unwrap(),
+        );
 
-        let mut hitbox = Shape::square(n64(2.0))
-            .place(v2(n64(-10.0), n64(0.0)))
+        let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(-10.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
             .still();
-        hitbox.vel.value = v2(n64(1.0), n64(0.0));
+        hitbox.vel.value = v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        let mut hitbox = Shape::circle(n64(2.0))
-            .place(v2(n64(10.0), n64(0.0)))
+        let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(10.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
             .still();
-        hitbox.vel.value = v2(n64(-1.0), n64(0.0));
+        hitbox.vel.value = v2(
+            BigRational::from_float(-1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        advance_to_event(&mut collider, n64(9.0));
+        advance_to_event(&mut collider, BigRational::from_float(9.0).unwrap());
         assert_eq!(
             collider.next(),
             Some((HbEvent::Collide, 0.into(), 1.into()))
         );
-        advance_to_event(&mut collider, n64(11.125));
+        advance_to_event(&mut collider, BigRational::from_float(11.125).unwrap());
         assert_eq!(
             collider.next(),
             Some((HbEvent::Separate, 0.into(), 1.into()))
         );
-        advance(&mut collider, n64(23.0));
+        advance(&mut collider, BigRational::from_float(23.0).unwrap());
 
         let serialized = serialize(&collider).unwrap();
         let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
@@ -379,57 +581,120 @@ pub(crate) mod test_serde {
 
     #[test]
     fn test_hitbox_updates() {
-        let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+        let mut collider = Collider::<TestHbProfile>::new(
+            BigRational::from_float(4.0).unwrap(),
+            BigRational::from_float(0.25).unwrap(),
+        );
 
-        let mut hitbox = Shape::square(n64(2.0))
-            .place(v2(n64(-10.0), n64(0.0)))
+        let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(-10.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
             .still();
-        hitbox.vel.value = v2(n64(1.0), n64(0.0));
+        hitbox.vel.value = v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert!(overlaps.is_empty());
 
-        let mut hitbox = Shape::circle(n64(2.0))
-            .place(v2(n64(10.0), n64(0.0)))
+        let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
+            .place(v2(
+                BigRational::from_float(10.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            ))
             .still();
-        hitbox.vel.value = v2(n64(1.0), n64(0.0));
+        hitbox.vel.value = v2(
+            BigRational::from_float(1.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert!(overlaps.is_empty());
 
-        advance(&mut collider, n64(11.0));
+        advance(&mut collider, BigRational::from_float(11.0).unwrap());
 
         let mut hitbox = collider.get_hitbox(0);
         assert_eq!(
             hitbox.value,
-            Shape::square(n64(2.0)).place(v2(n64(1.0), n64(0.0)))
+            Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            ))
         );
-        assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
-        assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-        assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-        hitbox.value.pos = v2(n64(0.0), n64(2.0));
-        hitbox.vel.value = v2(n64(0.0), n64(-1.0));
+        assert_eq!(
+            hitbox.vel.value,
+            v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.resize,
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.end_time,
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        hitbox.value.pos = v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(2.0).unwrap(),
+        );
+        hitbox.vel.value = v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(-1.0).unwrap(),
+        );
         let overlaps = collider.remove_hitbox(0);
         assert_eq!(overlaps, vec![]);
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        advance(&mut collider, n64(14.0));
+        advance(&mut collider, BigRational::from_float(14.0).unwrap());
 
         let mut hitbox = collider.get_hitbox(1);
         assert_eq!(
             hitbox.value,
-            Shape::circle(n64(2.0)).place(v2(n64(24.0), n64(0.0)))
+            Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
+                BigRational::from_float(24.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            ))
         );
-        assert_eq!(hitbox.vel.value, v2(n64(1.0), n64(0.0)));
-        assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-        assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-        hitbox.value.pos = v2(n64(0.0), n64(-8.0));
-        hitbox.vel.value = v2(n64(0.0), n64(0.0));
+        assert_eq!(
+            hitbox.vel.value,
+            v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.resize,
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.end_time,
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        hitbox.value.pos = v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(-8.0).unwrap(),
+        );
+        hitbox.vel.value = v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
         let overlaps = collider.remove_hitbox(1);
         assert_eq!(overlaps, vec![]);
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        advance_to_event(&mut collider, n64(19.0));
+        advance_to_event(&mut collider, BigRational::from_float(19.0).unwrap());
 
         assert_eq!(
             collider.next(),
@@ -438,46 +703,94 @@ pub(crate) mod test_serde {
         let mut hitbox = collider.get_hitbox(0);
         assert_eq!(
             hitbox.value,
-            Shape::square(n64(2.0)).place(v2(n64(0.0), n64(-6.0)))
+            Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(-6.0).unwrap()
+            ))
         );
-        assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(-1.0)));
-        assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-        assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-        hitbox.vel.value = v2(n64(0.0), n64(0.0));
+        assert_eq!(
+            hitbox.vel.value,
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(-1.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.resize,
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.end_time,
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        hitbox.vel.value = v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        );
         collider.set_hitbox_vel(0, hitbox.vel);
 
         let mut hitbox = collider.get_hitbox(1);
         assert_eq!(
             hitbox.value,
-            Shape::circle(n64(2.0)).place(v2(n64(0.0), n64(-8.0)))
+            Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(-8.0).unwrap()
+            ))
         );
-        assert_eq!(hitbox.vel.value, v2(n64(0.0), n64(0.0)));
-        assert_eq!(hitbox.vel.resize, v2(n64(0.0), n64(0.0)));
-        assert_eq!(hitbox.vel.end_time, n64(f64::INFINITY));
-        hitbox.vel.value = v2(n64(0.0), n64(2.0));
+        assert_eq!(
+            hitbox.vel.value,
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.resize,
+            v2(
+                BigRational::from_float(0.0).unwrap(),
+                BigRational::from_float(0.0).unwrap()
+            )
+        );
+        assert_eq!(
+            hitbox.vel.end_time,
+            BigRational::from_float(f64::INFINITY).unwrap()
+        );
+        hitbox.vel.value = v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(2.0).unwrap(),
+        );
         collider.set_hitbox_vel(1, hitbox.vel);
 
-        let hitbox = Shape::rect(v2(n64(2.0), n64(20.0)))
-            .place(v2(n64(0.0), n64(0.0)))
-            .still();
+        let hitbox = Shape::rect(v2(
+            BigRational::from_float(2.0).unwrap(),
+            BigRational::from_float(20.0).unwrap(),
+        ))
+        .place(v2(
+            BigRational::from_float(0.0).unwrap(),
+            BigRational::from_float(0.0).unwrap(),
+        ))
+        .still();
         assert_eq!(
             sort(collider.add_hitbox(2.into(), hitbox)),
             vec![0.into(), 1.into()]
         );
 
-        advance_to_event(&mut collider, n64(21.125));
+        advance_to_event(&mut collider, BigRational::from_float(21.125).unwrap());
 
         assert_eq!(
             collider.next(),
             Some((HbEvent::Separate, 0.into(), 1.into()))
         );
 
-        advance(&mut collider, n64(26.125));
+        advance(&mut collider, BigRational::from_float(26.125).unwrap());
 
         let overlaps = collider.remove_hitbox(1);
         assert_eq!(overlaps, vec![2.into()]);
 
-        advance(&mut collider, n64(37.125));
+        advance(&mut collider, BigRational::from_float(37.125).unwrap());
 
         let serialized = serialize(&collider).unwrap();
         let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
@@ -486,24 +799,42 @@ pub(crate) mod test_serde {
 
     #[test]
     fn test_get_overlaps() {
-        let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+        let mut collider = Collider::<TestHbProfile>::new(
+            BigRational::from_float(4.0).unwrap(),
+            BigRational::from_float(0.25).unwrap(),
+        );
 
         collider.add_hitbox(
             0.into(),
-            Shape::square(n64(2.0))
-                .place(v2(n64(-10.0), n64(0.0)))
-                .moving(v2(n64(1.0), n64(0.0))),
+            Shape::square(BigRational::from_float(2.0).unwrap())
+                .place(v2(
+                    BigRational::from_float(-10.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                ))
+                .moving(v2(
+                    BigRational::from_float(1.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                )),
         );
         collider.add_hitbox(
             1.into(),
-            Shape::circle(n64(2.0))
-                .place(v2(n64(10.0), n64(0.0)))
-                .moving(v2(n64(-1.0), n64(0.0))),
+            Shape::circle(BigRational::from_float(2.0).unwrap())
+                .place(v2(
+                    BigRational::from_float(10.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                ))
+                .moving(v2(
+                    BigRational::from_float(-1.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                )),
         );
         collider.add_hitbox(
             2.into(),
-            Shape::square(n64(2.0))
-                .place(v2(n64(0.0), n64(0.0)))
+            Shape::square(BigRational::from_float(2.0).unwrap())
+                .place(v2(
+                    BigRational::from_float(0.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                ))
                 .still(),
         );
 
@@ -515,7 +846,7 @@ pub(crate) mod test_serde {
         assert!(!collider.is_overlapping(1, 2));
         assert!(!collider.is_overlapping(1, 0));
 
-        advance_through_events(&mut collider, n64(10.0));
+        advance_through_events(&mut collider, BigRational::from_float(10.0).unwrap());
 
         assert_eq!(sort(collider.get_overlaps(0)), vec![1.into(), 2.into()]);
         assert_eq!(sort(collider.get_overlaps(1)), vec![0.into(), 2.into()]);
@@ -525,8 +856,14 @@ pub(crate) mod test_serde {
         assert!(collider.is_overlapping(1, 2));
         assert!(collider.is_overlapping(1, 0));
 
-        collider.set_hitbox_vel(1, HbVel::moving(v2(n64(1.0), n64(0.0))));
-        advance_through_events(&mut collider, n64(20.0));
+        collider.set_hitbox_vel(
+            1,
+            HbVel::moving(v2(
+                BigRational::from_float(1.0).unwrap(),
+                BigRational::from_float(0.0).unwrap(),
+            )),
+        );
+        advance_through_events(&mut collider, BigRational::from_float(20.0).unwrap());
 
         assert_eq!(collider.get_overlaps(0), vec![1.into()]);
         assert_eq!(collider.get_overlaps(1), vec![0.into()]);
@@ -550,34 +887,55 @@ pub(crate) mod test_serde {
 
     #[test]
     fn test_query_overlaps() {
-        let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+        let mut collider = Collider::<TestHbProfile>::new(
+            BigRational::from_float(4.0).unwrap(),
+            BigRational::from_float(0.25).unwrap(),
+        );
 
         collider.add_hitbox(
             0.into(),
-            Shape::square(n64(2.0))
-                .place(v2(n64(-5.0), n64(0.0)))
-                .moving(v2(n64(1.0), n64(0.0))),
+            Shape::square(BigRational::from_float(2.0).unwrap())
+                .place(v2(
+                    BigRational::from_float(-5.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                ))
+                .moving(v2(
+                    BigRational::from_float(1.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                )),
         );
         collider.add_hitbox(
             1.into(),
-            Shape::circle(n64(2.0))
-                .place(v2(n64(0.0), n64(0.0)))
+            Shape::circle(BigRational::from_float(2.0).unwrap())
+                .place(v2(
+                    BigRational::from_float(0.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                ))
                 .still(),
         );
         collider.add_hitbox(
             2.into(),
-            Shape::circle(n64(2.0))
-                .place(v2(n64(10.0), n64(0.0)))
-                .moving(v2(n64(-1.0), n64(0.0))),
+            Shape::circle(BigRational::from_float(2.0).unwrap())
+                .place(v2(
+                    BigRational::from_float(10.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                ))
+                .moving(v2(
+                    BigRational::from_float(-1.0).unwrap(),
+                    BigRational::from_float(0.0).unwrap(),
+                )),
         );
 
-        let test_shape = Shape::circle(n64(2.0)).place(v2(n64(-1.0), n64(0.5)));
+        let test_shape = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
+            BigRational::from_float(-1.0).unwrap(),
+            BigRational::from_float(0.5).unwrap(),
+        ));
         assert_eq!(
             collider.query_overlaps(&test_shape, &5.into()),
             vec![1.into()]
         );
 
-        advance(&mut collider, n64(3.0));
+        advance(&mut collider, BigRational::from_float(3.0).unwrap());
         assert_eq!(
             sort(collider.query_overlaps(&test_shape, &5.into())),
             vec![0.into(), 1.into()]
@@ -590,28 +948,42 @@ pub(crate) mod test_serde {
 
     #[test]
     fn test_separate_initial_overlap() {
-        let mut collider = Collider::<TestHbProfile>::new(n64(4.0), n64(0.25));
+        let mut collider = Collider::<TestHbProfile>::new(
+            BigRational::from_float(4.0).unwrap(),
+            BigRational::from_float(0.25).unwrap(),
+        );
 
         let overlaps = collider.add_hitbox(
             0.into(),
-            Shape::square(n64(1.))
-                .place(v2(n64(0.), n64(0.)))
-                .moving(v2(n64(0.0), n64(1.))),
+            Shape::square(BigRational::from_float(1.).unwrap())
+                .place(v2(
+                    BigRational::from_float(0.).unwrap(),
+                    BigRational::from_float(0.).unwrap(),
+                ))
+                .moving(v2(
+                    BigRational::from_float(0.0).unwrap(),
+                    BigRational::from_float(1.).unwrap(),
+                )),
         );
         assert_eq!(overlaps, vec![]);
         let overlaps = collider.add_hitbox(
             1.into(),
-            Shape::square(n64(1.)).place(v2(n64(0.), n64(0.))).still(),
+            Shape::square(BigRational::from_float(1.).unwrap())
+                .place(v2(
+                    BigRational::from_float(0.).unwrap(),
+                    BigRational::from_float(0.).unwrap(),
+                ))
+                .still(),
         );
         assert_eq!(overlaps, vec![0.into()]);
 
-        advance_to_event(&mut collider, n64(1.25));
+        advance_to_event(&mut collider, BigRational::from_float(1.25).unwrap());
         assert_eq!(
             collider.next(),
             Some((HbEvent::Separate, 0.into(), 1.into()))
         );
 
-        advance(&mut collider, n64(1.5));
+        advance(&mut collider, BigRational::from_float(1.5).unwrap());
 
         let serialized = serialize(&collider).unwrap();
         let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();

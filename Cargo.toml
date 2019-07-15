@@ -22,7 +22,7 @@ enable_serde = ["serde", "bincode"]
 
 [dependencies]
 fnv = "^1.0.3"
-num = {version="0.2.0", features=["std", "i128", "rand", "serde"]}
+rug = {version="1.5.1", features=["integer", "rational", "float", "complex", "rand", "serde"]}
 
 # Optional dependencies for supporting serde.  Most people will not need or want
 # to use this capability, but for those that want to be able to freeze the state

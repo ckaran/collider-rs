@@ -22,6 +22,7 @@ use fnv::FnvHashSet;
 use num::{BigInt, BigRational, One, Signed, Zero};
 use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
+use std::f64;
 use std::hash::Hash;
 
 /// # Calculates the approximate square root of the value
@@ -169,15 +170,58 @@ pub fn approx_sine(angle: BigRational, epsilon: BigRational) -> Result<BigRation
 /// If `epsilon > 0.0`, then the cosine of `angle` is returned within an `Ok(_)`
 /// variant.  Otherwise an error string is returned.
 pub fn approx_cosine(angle: BigRational, epsilon: BigRational) -> Result<BigRational, String> {
-    // FIXME: I know that I should use the CORDIC algorithm to calculate this
-    // correctly, but I don't have time to do that right now.  So, references,
-    // followed by a hack
+    // References for the algorithm I use.
     //
     // https://pdfs.semanticscholar.org/f2a6/eef864d928b462ca2d9f7db19b4078584bf4.pdf
     // https://people.clas.ufl.edu/bruceedwards/files/paper.pdf
     // https://en.wikipedia.org/wiki/Trigonometric_functions#Basic_identities
     // https://en.wikipedia.org/wiki/CORDIC
 
+    // This algorithm **only** works in the range [-𝞹/2, 𝞹/2]; it returns highly
+    // non-sensical values for everything else.  To protect against that, we
+    // return an error if the angle outside of this range.  I also require that
+    // epsilon be positive, otherwise this algorithm will never terminate.
+    //
+    // FIXME: I should **not** be using f64::PI here; instead, I should
+    // calculate it using the
+    // [Chudnovsky algorithm](https://en.wikipedia.org/wiki/Chudnovsky_algorithm)
+    // so that the error bounds are controlled.  However, although I can see how
+    // to implement the algorithm, I don't currently know how to calculate the
+    // error bounds for it.  Thus, there isn't any point in implementing it
+    // right now.
+
+    let half_pi = BigRational::from_float(f64::PI / 2.0);
+    if (angle > half_pi) || (angle < -half_pi) {
+        return Err(format!(
+            "approx_cosine() can only handle values in the range \
+             [{}, {}], but the value {} was passed in.",
+            half_pi, -half_pi, angle
+        ));
+    } else if epsilon <= BigRational::zero() {
+        return Err(format!(
+            "approx_cosine() requires a positive epsilon.  \
+             epsilon was {}.",
+            epsilon
+        ));
+    }
+
+    // I'm implementing the algorithm from the article:
+    //
+    // B. Tomas Johansson (2018) "An elementary algorithm to evaluate
+    // trigonometric functions to high precision", International Journal of
+    // Mathematical Education in Science and Technology, 49:1, 131-137,
+    // DOI: 10.1080/0020739X.2017.1349943
+    //
+    // The preprint for this article is at
+    // https://pdfs.semanticscholar.org/f2a6/eef864d928b462ca2d9f7db19b4078584bf4.pdf
+
+    // The algorithm iteratively refines the current estimate for the cosine
+    // until it is less the epsilon that is passed in.  Since the formula for
+    // the error is known, we can calculate the number of iterations required
+    // apriori, and then use that to iterate over the algorithm proper.  Since
+    // the error is O(angle^4 / 2^(2 * k)), where k is the number of iterations,
+    // I'm going to overestimate the total error, by assuming the angle is 𝞹,
+    // and then solve for a k that makes the total value < epsilon.
     unimplemented!("Cem, you forgot to finish this!");
 }
 

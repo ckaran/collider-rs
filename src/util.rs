@@ -92,6 +92,7 @@ use log;
 ///
 /// The `f64` that is the least representable value strictly greater than
 /// `value` if `(value.is_finite()) && (value < f64::MAX)`, or `value` if not.
+#[allow(dead_code)]
 #[inline]
 pub(crate) fn bump_f64(value: f64) -> f64 {
     if (value.is_finite()) && (value < f64::MAX) {
@@ -177,6 +178,7 @@ pub(crate) fn bump_f64(value: f64) -> f64 {
 ///
 /// If the result of `operation(a, b)` is equal to either `a` or `b`, then
 /// `bump_f64(result)` is returned, other the result is returned directly.
+#[allow(dead_code)]
 #[inline]
 pub(crate) fn result_bumper_64(operation: fn(f64, f64) -> f64, a: f64, b: f64) -> f64 {
     let result = operation(a, b);

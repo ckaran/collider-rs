@@ -19,12 +19,12 @@ use self::serde::*;
 
 pub use self::one_or_two::OneOrTwo;
 use fnv::FnvHashSet;
+use log;
 use noisy_float::prelude::*;
 use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
 use std::f64;
 use std::hash::Hash;
-use log;
 
 /// # Increases `value` by the least amount possible.
 ///

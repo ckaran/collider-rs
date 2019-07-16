@@ -41,6 +41,13 @@ impl EventKey {
     fn time(&self) -> N64 {
         self.time
     }
+
+    /// # Sets the time for this key.
+    ///
+    /// **DO NOT** use this function will the key is in any map!!!
+    fn set_time(&mut self, new_time: N64) {
+        self.time = new_time;
+    }
 }
 
 impl PartialEq for EventKey {
@@ -179,6 +186,34 @@ impl EventManager {
 
     pub fn peek_time(&self) -> N64 {
         self.peek_key().map_or(n64(f64::INFINITY), |key| key.time())
+    }
+
+    pub fn bump_time(&mut self, time: N64) {
+        // std::BTreeMap doesn't have anything equivalent to a pop() method.
+        // That is a serious problem, and (thanks to rust's borrowing rules),
+        // leads to the crazy code below.  Basically, this is a really cruddy
+        // pop method.
+        loop {
+            let next_key;
+            {
+                next_key = self.events.keys().next();
+            };
+
+            if let Some(key) = next_key {
+                if key.time() < time {
+                    let mut key = key.clone();
+                    match self.events.remove(&key) {
+                        Some(value) => {
+                            key.set_time(time);
+                            self.events.insert(key, value);
+                        }
+                        None => panic!("Something went wrong, use a debugger."),
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
     }
 
     pub fn next<M: EventKeysMap>(&mut self, time: N64, map: &mut M) -> Option<InternalEvent> {

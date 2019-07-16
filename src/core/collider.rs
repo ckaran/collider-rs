@@ -17,7 +17,7 @@ use crate::core::events::{EventKey, EventKeysMap, EventManager, InternalEvent};
 use crate::core::grid::Grid;
 use crate::core::{HbGroup, HbId, HbProfile, HbVel, Hitbox, HIGH_TIME};
 use crate::geom::PlacedShape;
-use crate::util::TightSet;
+use crate::util::{bump_f64, TightSet};
 use fnv::FnvHashMap;
 use noisy_float::prelude::*;
 use std::mem;
@@ -110,7 +110,14 @@ impl<P: HbProfile> Collider<P> {
             "time must not exceed {}",
             n64(HIGH_TIME)
         );
-        self.time = time;
+
+        let now = self.time();
+        if time > now {
+            self.time = time;
+        } else {
+            self.time = n64(bump_f64(time.raw()));
+            self.events.bump_time(self.time());
+        }
     }
 
     /// Processes and returns the next `Collide` or `Separate` event, or returns

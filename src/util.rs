@@ -22,7 +22,166 @@ use fnv::FnvHashSet;
 use noisy_float::prelude::*;
 use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
+use std::f64;
 use std::hash::Hash;
+
+/// # Increases `value` by the least amount possible.
+///
+/// This function will increase `value` by the least possible amount to ensure
+/// that the output is greater than thn `value`.  If `value == f64::MAX`, or if
+/// `!value.is_finite()`, then `value` will be returned unchanged.
+///
+/// So why does this function exist at all?  Time must **always** increase;
+/// setting time to the same date as the current date ensures that you will have
+/// serious issues at some point during your simulation.  This function 'solves'
+/// the problem by returning the least representable value that is greater than
+/// the input.  This is probably a bad idea, but I'm out of good ideas, so I'm
+/// doing this.
+///
+/// ```
+///            ▄▄▄▄▄        ▄▄     ▄▄▄   ▄▄     ▄▄▄▄   ▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄
+///            ██▀▀▀██     ████    ███   ██   ██▀▀▀▀█  ██▀▀▀▀▀▀  ██▀▀▀▀██
+///            ██    ██    ████    ██▀█  ██  ██        ██        ██    ██
+///            ██    ██   ██  ██   ██ ██ ██  ██  ▄▄▄▄  ███████   ███████
+///            ██    ██   ██████   ██  █▄██  ██  ▀▀██  ██        ██  ▀██▄
+///            ██▄▄▄██   ▄██  ██▄  ██   ███   ██▄▄▄██  ██▄▄▄▄▄▄  ██    ██
+///            ▀▀▀▀▀     ▀▀    ▀▀  ▀▀   ▀▀▀     ▀▀▀▀   ▀▀▀▀▀▀▀▀  ▀▀    ▀▀▀
+///
+///
+///
+///                     ▄▄      ▄▄  ▄▄▄▄▄▄   ▄▄        ▄▄
+///                     ██      ██  ▀▀██▀▀   ██        ██
+///                     ▀█▄ ██ ▄█▀    ██     ██        ██
+///                      ██ ██ ██     ██     ██        ██
+///                      ███▀▀███     ██     ██        ██
+///                      ███  ███   ▄▄██▄▄   ██▄▄▄▄▄▄  ██▄▄▄▄▄▄
+///                      ▀▀▀  ▀▀▀   ▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀
+///
+///
+///
+///  ▄▄▄▄▄▄      ▄▄▄▄    ▄▄▄▄▄▄     ▄▄▄▄▄▄   ▄▄▄   ▄▄    ▄▄▄▄      ▄▄▄▄    ▄▄▄   ▄▄
+///  ██▀▀▀▀██   ██▀▀██   ██▀▀▀▀██   ▀▀██▀▀   ███   ██  ▄█▀▀▀▀█    ██▀▀██   ███   ██
+///  ██    ██  ██    ██  ██    ██     ██     ██▀█  ██  ██▄       ██    ██  ██▀█  ██
+///  ███████   ██    ██  ███████      ██     ██ ██ ██   ▀████▄   ██    ██  ██ ██ ██
+///  ██  ▀██▄  ██    ██  ██    ██     ██     ██  █▄██       ▀██  ██    ██  ██  █▄██
+///  ██    ██   ██▄▄██   ██▄▄▄▄██   ▄▄██▄▄   ██   ███  █▄▄▄▄▄█▀   ██▄▄██   ██   ███
+///  ▀▀    ▀▀▀   ▀▀▀▀    ▀▀▀▀▀▀▀    ▀▀▀▀▀▀   ▀▀   ▀▀▀   ▀▀▀▀▀      ▀▀▀▀    ▀▀   ▀▀▀
+/// ```
+///
+/// This function assumes that the bit layout of an `f64` is as specified in
+/// IEEE 754-2008 (https://en.wikipedia.org/wiki/IEEE_754-2008_revision)
+/// for a `binary64`
+/// (https://en.wikipedia.org/wiki/Double-precision_floating-point_format) type.
+///
+/// Because of this assumption, if the layout is not identical to a
+/// `binary64` type, this function **will** cause serious havoc to your program,
+/// probably in ways that will be hard to trace.  There are a series
+/// `debug_assert()!` statements that try to limit the possible damage, but they
+/// aren't guaranteed to work.  Be careful!
+///
+/// # Parameters
+///
+/// - `value` - A `f64` that you want to bump up to the next representable
+///     value.  Provided this is both finite and less than `f64::MAX`, the
+///     returned value will be the least representable value strictly greater
+///     than the input.  If `value` is not finite, or if it is equal to
+///     `f64::MAX`, then this will be returned unchanged.
+///
+/// # Return value
+///
+/// The `f64` that is the least representable value strictly greater than
+/// `value` if `(value.is_finite()) && (value < f64::MAX)`, or `value` if not.
+#[inline]
+pub(crate) fn bump_f64(value: f64) -> f64 {
+    if (value.is_finite()) && (value < f64::MAX) {
+        // NOTES: I'm assuming that the layout of an f64 is now and will always
+        // be exactly that specified by IEEE 754, which can be found at
+        // https://en.wikipedia.org/wiki/Double-precision_floating-point_format.
+        // If that changes, then this will silently break, causing all kinds of
+        // havoc.  You have been warned!
+        const MASK: u64 = (1 << 63) - 1;
+
+        // The trick that I'm using here is pretty simple; the fractional bits
+        // are all stored in the least significant bits of the f64, and they are
+        // stored as an unsigned integer. The next 11 most significant bits hold
+        // the exponent, once again as an unsigned integer.  When we add one,
+        // either the new fractional bits will contain the complete change, or
+        // the overflow will cause the fractional bits to be 0, and the exponent
+        // to increase by one bit.  In both cases, we're OK.  The only time this
+        // trick can break down is when value is >= f64::MAX... which we've
+        // already proven isn't true...
+        let bits = value.to_bits();
+        let result = ((!MASK) & bits) | (MASK & (bits + 1));
+        f64::from_bits(result)
+    } else {
+        value
+    }
+}
+
+/// # Executes and returns the bumped value of the incoming operation.
+///
+/// Executes `operation(a, b)`, testing the returned result for equality to
+/// both `a` and `b`.  If the result is equal to either `a` or `b`, then
+/// `bump_f64(result)` is returned, otherwise the result is returned unchanged.
+///
+/// ```
+///            ▄▄▄▄▄        ▄▄     ▄▄▄   ▄▄     ▄▄▄▄   ▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄
+///            ██▀▀▀██     ████    ███   ██   ██▀▀▀▀█  ██▀▀▀▀▀▀  ██▀▀▀▀██
+///            ██    ██    ████    ██▀█  ██  ██        ██        ██    ██
+///            ██    ██   ██  ██   ██ ██ ██  ██  ▄▄▄▄  ███████   ███████
+///            ██    ██   ██████   ██  █▄██  ██  ▀▀██  ██        ██  ▀██▄
+///            ██▄▄▄██   ▄██  ██▄  ██   ███   ██▄▄▄██  ██▄▄▄▄▄▄  ██    ██
+///            ▀▀▀▀▀     ▀▀    ▀▀  ▀▀   ▀▀▀     ▀▀▀▀   ▀▀▀▀▀▀▀▀  ▀▀    ▀▀▀
+///
+///
+///
+///                     ▄▄      ▄▄  ▄▄▄▄▄▄   ▄▄        ▄▄
+///                     ██      ██  ▀▀██▀▀   ██        ██
+///                     ▀█▄ ██ ▄█▀    ██     ██        ██
+///                      ██ ██ ██     ██     ██        ██
+///                      ███▀▀███     ██     ██        ██
+///                      ███  ███   ▄▄██▄▄   ██▄▄▄▄▄▄  ██▄▄▄▄▄▄
+///                      ▀▀▀  ▀▀▀   ▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀
+///
+///
+///
+///  ▄▄▄▄▄▄      ▄▄▄▄    ▄▄▄▄▄▄     ▄▄▄▄▄▄   ▄▄▄   ▄▄    ▄▄▄▄      ▄▄▄▄    ▄▄▄   ▄▄
+///  ██▀▀▀▀██   ██▀▀██   ██▀▀▀▀██   ▀▀██▀▀   ███   ██  ▄█▀▀▀▀█    ██▀▀██   ███   ██
+///  ██    ██  ██    ██  ██    ██     ██     ██▀█  ██  ██▄       ██    ██  ██▀█  ██
+///  ███████   ██    ██  ███████      ██     ██ ██ ██   ▀████▄   ██    ██  ██ ██ ██
+///  ██  ▀██▄  ██    ██  ██    ██     ██     ██  █▄██       ▀██  ██    ██  ██  █▄██
+///  ██    ██   ██▄▄██   ██▄▄▄▄██   ▄▄██▄▄   ██   ███  █▄▄▄▄▄█▀   ██▄▄██   ██   ███
+///  ▀▀    ▀▀▀   ▀▀▀▀    ▀▀▀▀▀▀▀    ▀▀▀▀▀▀   ▀▀   ▀▀▀   ▀▀▀▀▀      ▀▀▀▀    ▀▀   ▀▀▀
+/// ```
+///
+/// Because this function tests for equality, it won't produce the results you
+/// expect when doing subtraction or other negating operations.  **Only** use
+/// this on operations where you expect the result to be greater than either of
+/// the operands!
+///
+/// # Parameters
+///
+/// - `operation` - A binary operation that will be executed on `a` and `b`.
+///     `a` will always be the first operand, and `b` will always be the second,
+///     so if the order matters, you can count on this order.
+/// - `a` - The first operad to `operation`.  May be any representable value for
+///     a `f64`; in particular `NaN` and infinity are handled correctly.
+/// - `b` - The second operad to `operation`.  May be any representable value
+///     for a `f64`; in particular `NaN` and infinity are handled correctly.
+///
+/// # Return value
+///
+/// If the result of `operation(a, b)` is equal to either `a` or `b`, then
+/// `bump_f64(result)` is returned, other the result is returned directly.
+#[inline]
+pub(crate) fn result_bumper_64(operation: fn(f64, f64) -> f64, a: f64, b: f64) -> f64 {
+    let result = operation(a, b);
+    if (result == a) || (result == b) {
+        bump_f64(result)
+    } else {
+        result
+    }
+}
 
 // returns the ascending root of a quadratic polynomial ax^2 + bx + c
 pub fn quad_root_ascending(a: N64, b: N64, c: N64) -> Option<N64> {

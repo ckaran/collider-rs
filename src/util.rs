@@ -24,6 +24,7 @@ use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
 use std::f64;
 use std::hash::Hash;
+use log;
 
 /// # Increases `value` by the least amount possible.
 ///
@@ -112,6 +113,9 @@ pub(crate) fn bump_f64(value: f64) -> f64 {
         // already proven isn't true...
         let bits = value.to_bits();
         let result = ((!MASK) & bits) | (MASK & (bits + 1));
+
+        log::trace!("Bumped {:?} to {:?}.", value, result);
+
         f64::from_bits(result)
     } else {
         value

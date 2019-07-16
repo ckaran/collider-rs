@@ -212,6 +212,8 @@ impl EventManager {
                 } else {
                     break;
                 }
+            } else {
+                break;
             }
         }
     }

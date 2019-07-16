@@ -19,8 +19,11 @@ use self::serde::*;
 
 use super::{Collider, HbEvent, HbId, HbProfile, HbVel};
 use crate::geom::{v2, Shape};
-use num::BigRational;
-use std::f64;
+use rug::{
+    float,
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
@@ -43,12 +46,12 @@ impl HbProfile for TestHbProfile {
     }
 }
 
-fn advance_to_event(collider: &mut Collider<TestHbProfile>, time: BigRational) {
+fn advance_to_event(collider: &mut Collider<TestHbProfile>, time: OrdFloat) {
     advance(collider, time);
     assert_eq!(collider.next_time(), collider.time());
 }
 
-fn advance(collider: &mut Collider<TestHbProfile>, time: BigRational) {
+fn advance(collider: &mut Collider<TestHbProfile>, time: OrdFloat) {
     while collider.time() < time {
         assert!(collider.next().is_none());
         let new_time = collider.next_time().min(time);
@@ -57,7 +60,7 @@ fn advance(collider: &mut Collider<TestHbProfile>, time: BigRational) {
     assert_eq!(collider.time(), time);
 }
 
-fn advance_through_events(collider: &mut Collider<TestHbProfile>, time: BigRational) {
+fn advance_through_events(collider: &mut Collider<TestHbProfile>, time: OrdFloat) {
     while collider.time() < time {
         collider.next();
         let new_time = collider.next_time().min(time);
@@ -74,165 +77,197 @@ fn sort(mut vector: Vec<TestHbProfile>) -> Vec<TestHbProfile> {
 #[test]
 fn smoke_test() {
     let mut collider = Collider::<TestHbProfile>::new(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(0.25).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
     );
 
-    let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
-        .place(v2(
-            BigRational::from_float(-10.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
-        ))
-        .still();
+    let mut hitbox = Shape::square(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), -10.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+    ))
+    .still();
     hitbox.vel.value = v2(
-        BigRational::from_float(1.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     );
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
-        .place(v2(
-            BigRational::from_float(10.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
-        ))
-        .still();
+    let mut hitbox = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+    ))
+    .still();
     hitbox.vel.value = v2(
-        BigRational::from_float(-1.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     );
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    advance_to_event(&mut collider, BigRational::from_float(9.0).unwrap());
+    advance_to_event(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 9.0, Round::Up).0),
+    );
     assert_eq!(
         collider.next(),
         Some((HbEvent::Collide, 0.into(), 1.into()))
     );
-    advance_to_event(&mut collider, BigRational::from_float(11.125).unwrap());
+    advance_to_event(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 11.125, Round::Up).0),
+    );
     assert_eq!(
         collider.next(),
         Some((HbEvent::Separate, 0.into(), 1.into()))
     );
-    advance(&mut collider, BigRational::from_float(23.0).unwrap());
+    advance(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 23.0, Round::Up).0),
+    );
 }
 
 #[test]
 fn test_hitbox_updates() {
     let mut collider = Collider::<TestHbProfile>::new(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(0.25).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
     );
 
-    let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
-        .place(v2(
-            BigRational::from_float(-10.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
-        ))
-        .still();
+    let mut hitbox = Shape::square(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), -10.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+    ))
+    .still();
     hitbox.vel.value = v2(
-        BigRational::from_float(1.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     );
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert!(overlaps.is_empty());
 
-    let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
-        .place(v2(
-            BigRational::from_float(10.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
-        ))
-        .still();
+    let mut hitbox = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+    ))
+    .still();
     hitbox.vel.value = v2(
-        BigRational::from_float(1.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     );
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert!(overlaps.is_empty());
 
-    advance(&mut collider, BigRational::from_float(11.0).unwrap());
+    advance(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 11.0, Round::Up).0),
+    );
 
     let mut hitbox = collider.get_hitbox(0);
     assert_eq!(
         hitbox.value,
-        Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+        Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         ))
     );
     assert_eq!(
         hitbox.vel.value,
         v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.resize,
         v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.end_time,
-        BigRational::from_float(f64::INFINITY).unwrap()
+        OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
     );
     hitbox.value.pos = v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     );
     hitbox.vel.value = v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(-1.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
     );
     let overlaps = collider.remove_hitbox(0);
     assert_eq!(overlaps, vec![]);
     let overlaps = collider.add_hitbox(0.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    advance(&mut collider, BigRational::from_float(14.0).unwrap());
+    advance(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 14.0, Round::Up).0),
+    );
 
     let mut hitbox = collider.get_hitbox(1);
     assert_eq!(
         hitbox.value,
-        Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-            BigRational::from_float(24.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+        Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 24.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         ))
     );
     assert_eq!(
         hitbox.vel.value,
         v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.resize,
         v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.end_time,
-        BigRational::from_float(f64::INFINITY).unwrap()
+        OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
     );
     hitbox.value.pos = v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(-8.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -8.0, Round::Up).0),
     );
     hitbox.vel.value = v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     );
     let overlaps = collider.remove_hitbox(1);
     assert_eq!(overlaps, vec![]);
     let overlaps = collider.add_hitbox(1.into(), hitbox);
     assert_eq!(overlaps, vec![]);
 
-    advance_to_event(&mut collider, BigRational::from_float(19.0).unwrap());
+    advance_to_event(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 19.0, Round::Up).0),
+    );
 
     assert_eq!(
         collider.next(),
@@ -241,74 +276,80 @@ fn test_hitbox_updates() {
     let mut hitbox = collider.get_hitbox(0);
     assert_eq!(
         hitbox.value,
-        Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(-6.0).unwrap()
+        Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -6.0, Round::Up).0)
         ))
     );
     assert_eq!(
         hitbox.vel.value,
         v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(-1.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.resize,
         v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.end_time,
-        BigRational::from_float(f64::INFINITY).unwrap()
+        OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
     );
     hitbox.vel.value = v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     );
     collider.set_hitbox_vel(0, hitbox.vel);
 
     let mut hitbox = collider.get_hitbox(1);
     assert_eq!(
         hitbox.value,
-        Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(-8.0).unwrap()
+        Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -8.0, Round::Up).0)
         ))
     );
     assert_eq!(
         hitbox.vel.value,
         v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.resize,
         v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     assert_eq!(
         hitbox.vel.end_time,
-        BigRational::from_float(f64::INFINITY).unwrap()
+        OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
     );
     hitbox.vel.value = v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     );
     collider.set_hitbox_vel(1, hitbox.vel);
 
     let hitbox = Shape::rect(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(20.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 20.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     ))
     .still();
     assert_eq!(
@@ -316,60 +357,75 @@ fn test_hitbox_updates() {
         vec![0.into(), 1.into()]
     );
 
-    advance_to_event(&mut collider, BigRational::from_float(21.125).unwrap());
+    advance_to_event(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 21.125, Round::Up).0),
+    );
 
     assert_eq!(
         collider.next(),
         Some((HbEvent::Separate, 0.into(), 1.into()))
     );
 
-    advance(&mut collider, BigRational::from_float(26.125).unwrap());
+    advance(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 26.125, Round::Up).0),
+    );
 
     let overlaps = collider.remove_hitbox(1);
     assert_eq!(overlaps, vec![2.into()]);
 
-    advance(&mut collider, BigRational::from_float(37.125).unwrap());
+    advance(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 37.125, Round::Up).0),
+    );
 }
 
 #[test]
 fn test_get_overlaps() {
     let mut collider = Collider::<TestHbProfile>::new(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(0.25).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
     );
 
     collider.add_hitbox(
         0.into(),
-        Shape::square(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(-10.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .moving(v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            )),
+        Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), -10.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .moving(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        )),
     );
     collider.add_hitbox(
         1.into(),
-        Shape::circle(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(10.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .moving(v2(
-                BigRational::from_float(-1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            )),
+        Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .moving(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        )),
     );
     collider.add_hitbox(
         2.into(),
-        Shape::square(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .still(),
+        Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .still(),
     );
 
     assert_eq!(collider.get_overlaps(0), vec![]);
@@ -380,7 +436,10 @@ fn test_get_overlaps() {
     assert!(!collider.is_overlapping(1, 2));
     assert!(!collider.is_overlapping(1, 0));
 
-    advance_through_events(&mut collider, BigRational::from_float(10.0).unwrap());
+    advance_through_events(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+    );
 
     assert_eq!(sort(collider.get_overlaps(0)), vec![1.into(), 2.into()]);
     assert_eq!(sort(collider.get_overlaps(1)), vec![0.into(), 2.into()]);
@@ -393,11 +452,14 @@ fn test_get_overlaps() {
     collider.set_hitbox_vel(
         1,
         HbVel::moving(v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         )),
     );
-    advance_through_events(&mut collider, BigRational::from_float(20.0).unwrap());
+    advance_through_events(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 20.0, Round::Up).0),
+    );
 
     assert_eq!(collider.get_overlaps(0), vec![1.into()]);
     assert_eq!(collider.get_overlaps(1), vec![0.into()]);
@@ -418,54 +480,66 @@ fn test_get_overlaps() {
 #[test]
 fn test_query_overlaps() {
     let mut collider = Collider::<TestHbProfile>::new(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(0.25).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
     );
 
     collider.add_hitbox(
         0.into(),
-        Shape::square(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(-5.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .moving(v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            )),
+        Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), -5.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .moving(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        )),
     );
     collider.add_hitbox(
         1.into(),
-        Shape::circle(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .still(),
+        Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .still(),
     );
     collider.add_hitbox(
         2.into(),
-        Shape::circle(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(10.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .moving(v2(
-                BigRational::from_float(-1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            )),
+        Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .moving(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        )),
     );
 
-    let test_shape = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-        BigRational::from_float(-1.0).unwrap(),
-        BigRational::from_float(0.5).unwrap(),
+    let test_shape = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0),
     ));
     assert_eq!(
         collider.query_overlaps(&test_shape, &5.into()),
         vec![1.into()]
     );
 
-    advance(&mut collider, BigRational::from_float(3.0).unwrap());
+    advance(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0),
+    );
     assert_eq!(
         sort(collider.query_overlaps(&test_shape, &5.into())),
         vec![0.into(), 1.into()]
@@ -475,41 +549,51 @@ fn test_query_overlaps() {
 #[test]
 fn test_separate_initial_overlap() {
     let mut collider = Collider::<TestHbProfile>::new(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(0.25).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
     );
 
     let overlaps = collider.add_hitbox(
         0.into(),
-        Shape::square(BigRational::from_float(1.).unwrap())
-            .place(v2(
-                BigRational::from_float(0.).unwrap(),
-                BigRational::from_float(0.).unwrap(),
-            ))
-            .moving(v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(1.).unwrap(),
-            )),
+        Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 1., Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+        ))
+        .moving(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1., Round::Up).0),
+        )),
     );
     assert_eq!(overlaps, vec![]);
     let overlaps = collider.add_hitbox(
         1.into(),
-        Shape::square(BigRational::from_float(1.).unwrap())
-            .place(v2(
-                BigRational::from_float(0.).unwrap(),
-                BigRational::from_float(0.).unwrap(),
-            ))
-            .still(),
+        Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 1., Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+        ))
+        .still(),
     );
     assert_eq!(overlaps, vec![0.into()]);
 
-    advance_to_event(&mut collider, BigRational::from_float(1.25).unwrap());
+    advance_to_event(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0),
+    );
     assert_eq!(
         collider.next(),
         Some((HbEvent::Separate, 0.into(), 1.into()))
     );
 
-    advance(&mut collider, BigRational::from_float(1.5).unwrap());
+    advance(
+        &mut collider,
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.5, Round::Up).0),
+    );
 }
 
 #[cfg(all(test, feature = "enable_serde"))]
@@ -520,8 +604,8 @@ pub(crate) mod test_serde {
     #[test]
     fn test_trivial() {
         let collider = Collider::<TestHbProfile>::new(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(0.25).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
         );
 
         let serialized = serialize(&collider).unwrap();
@@ -532,47 +616,60 @@ pub(crate) mod test_serde {
     #[test]
     fn smoke_test() {
         let mut collider = Collider::<TestHbProfile>::new(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(0.25).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
         );
 
-        let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(-10.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .still();
+        let mut hitbox = Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), -10.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .still();
         hitbox.vel.value = v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         );
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(10.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .still();
+        let mut hitbox = Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .still();
         hitbox.vel.value = v2(
-            BigRational::from_float(-1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         );
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        advance_to_event(&mut collider, BigRational::from_float(9.0).unwrap());
+        advance_to_event(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 9.0, Round::Up).0),
+        );
         assert_eq!(
             collider.next(),
             Some((HbEvent::Collide, 0.into(), 1.into()))
         );
-        advance_to_event(&mut collider, BigRational::from_float(11.125).unwrap());
+        advance_to_event(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 11.125, Round::Up).0),
+        );
         assert_eq!(
             collider.next(),
             Some((HbEvent::Separate, 0.into(), 1.into()))
         );
-        advance(&mut collider, BigRational::from_float(23.0).unwrap());
+        advance(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 23.0, Round::Up).0),
+        );
 
         let serialized = serialize(&collider).unwrap();
         let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
@@ -582,119 +679,138 @@ pub(crate) mod test_serde {
     #[test]
     fn test_hitbox_updates() {
         let mut collider = Collider::<TestHbProfile>::new(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(0.25).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
         );
 
-        let mut hitbox = Shape::square(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(-10.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .still();
+        let mut hitbox = Shape::square(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), -10.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .still();
         hitbox.vel.value = v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         );
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert!(overlaps.is_empty());
 
-        let mut hitbox = Shape::circle(BigRational::from_float(2.0).unwrap())
-            .place(v2(
-                BigRational::from_float(10.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
-            ))
-            .still();
+        let mut hitbox = Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        ))
+        .still();
         hitbox.vel.value = v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         );
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert!(overlaps.is_empty());
 
-        advance(&mut collider, BigRational::from_float(11.0).unwrap());
+        advance(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 11.0, Round::Up).0),
+        );
 
         let mut hitbox = collider.get_hitbox(0);
         assert_eq!(
             hitbox.value,
-            Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+            Shape::square(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ))
         );
         assert_eq!(
             hitbox.vel.value,
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.resize,
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.end_time,
-            BigRational::from_float(f64::INFINITY).unwrap()
+            OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
         );
         hitbox.value.pos = v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(2.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
         );
         hitbox.vel.value = v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(-1.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
         );
         let overlaps = collider.remove_hitbox(0);
         assert_eq!(overlaps, vec![]);
         let overlaps = collider.add_hitbox(0.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        advance(&mut collider, BigRational::from_float(14.0).unwrap());
+        advance(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 14.0, Round::Up).0),
+        );
 
         let mut hitbox = collider.get_hitbox(1);
         assert_eq!(
             hitbox.value,
-            Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-                BigRational::from_float(24.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+            Shape::circle(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 24.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ))
         );
         assert_eq!(
             hitbox.vel.value,
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.resize,
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.end_time,
-            BigRational::from_float(f64::INFINITY).unwrap()
+            OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
         );
         hitbox.value.pos = v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(-8.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -8.0, Round::Up).0),
         );
         hitbox.vel.value = v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         );
         let overlaps = collider.remove_hitbox(1);
         assert_eq!(overlaps, vec![]);
         let overlaps = collider.add_hitbox(1.into(), hitbox);
         assert_eq!(overlaps, vec![]);
 
-        advance_to_event(&mut collider, BigRational::from_float(19.0).unwrap());
+        advance_to_event(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 19.0, Round::Up).0),
+        );
 
         assert_eq!(
             collider.next(),
@@ -703,74 +819,80 @@ pub(crate) mod test_serde {
         let mut hitbox = collider.get_hitbox(0);
         assert_eq!(
             hitbox.value,
-            Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(-6.0).unwrap()
+            Shape::square(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -6.0, Round::Up).0)
             ))
         );
         assert_eq!(
             hitbox.vel.value,
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(-1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.resize,
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.end_time,
-            BigRational::from_float(f64::INFINITY).unwrap()
+            OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
         );
         hitbox.vel.value = v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         );
         collider.set_hitbox_vel(0, hitbox.vel);
 
         let mut hitbox = collider.get_hitbox(1);
         assert_eq!(
             hitbox.value,
-            Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(-8.0).unwrap()
+            Shape::circle(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -8.0, Round::Up).0)
             ))
         );
         assert_eq!(
             hitbox.vel.value,
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.resize,
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             )
         );
         assert_eq!(
             hitbox.vel.end_time,
-            BigRational::from_float(f64::INFINITY).unwrap()
+            OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
         );
         hitbox.vel.value = v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(2.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
         );
         collider.set_hitbox_vel(1, hitbox.vel);
 
         let hitbox = Shape::rect(v2(
-            BigRational::from_float(2.0).unwrap(),
-            BigRational::from_float(20.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 20.0, Round::Up).0),
         ))
         .place(v2(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         ))
         .still();
         assert_eq!(
@@ -778,19 +900,28 @@ pub(crate) mod test_serde {
             vec![0.into(), 1.into()]
         );
 
-        advance_to_event(&mut collider, BigRational::from_float(21.125).unwrap());
+        advance_to_event(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 21.125, Round::Up).0),
+        );
 
         assert_eq!(
             collider.next(),
             Some((HbEvent::Separate, 0.into(), 1.into()))
         );
 
-        advance(&mut collider, BigRational::from_float(26.125).unwrap());
+        advance(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 26.125, Round::Up).0),
+        );
 
         let overlaps = collider.remove_hitbox(1);
         assert_eq!(overlaps, vec![2.into()]);
 
-        advance(&mut collider, BigRational::from_float(37.125).unwrap());
+        advance(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 37.125, Round::Up).0),
+        );
 
         let serialized = serialize(&collider).unwrap();
         let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();
@@ -800,42 +931,48 @@ pub(crate) mod test_serde {
     #[test]
     fn test_get_overlaps() {
         let mut collider = Collider::<TestHbProfile>::new(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(0.25).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
         );
 
         collider.add_hitbox(
             0.into(),
-            Shape::square(BigRational::from_float(2.0).unwrap())
-                .place(v2(
-                    BigRational::from_float(-10.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                ))
-                .moving(v2(
-                    BigRational::from_float(1.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                )),
+            Shape::square(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), -10.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            ))
+            .moving(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            )),
         );
         collider.add_hitbox(
             1.into(),
-            Shape::circle(BigRational::from_float(2.0).unwrap())
-                .place(v2(
-                    BigRational::from_float(10.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                ))
-                .moving(v2(
-                    BigRational::from_float(-1.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                )),
+            Shape::circle(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            ))
+            .moving(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            )),
         );
         collider.add_hitbox(
             2.into(),
-            Shape::square(BigRational::from_float(2.0).unwrap())
-                .place(v2(
-                    BigRational::from_float(0.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                ))
-                .still(),
+            Shape::square(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            ))
+            .still(),
         );
 
         assert_eq!(collider.get_overlaps(0), vec![]);
@@ -846,7 +983,10 @@ pub(crate) mod test_serde {
         assert!(!collider.is_overlapping(1, 2));
         assert!(!collider.is_overlapping(1, 0));
 
-        advance_through_events(&mut collider, BigRational::from_float(10.0).unwrap());
+        advance_through_events(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+        );
 
         assert_eq!(sort(collider.get_overlaps(0)), vec![1.into(), 2.into()]);
         assert_eq!(sort(collider.get_overlaps(1)), vec![0.into(), 2.into()]);
@@ -859,11 +999,14 @@ pub(crate) mod test_serde {
         collider.set_hitbox_vel(
             1,
             HbVel::moving(v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
             )),
         );
-        advance_through_events(&mut collider, BigRational::from_float(20.0).unwrap());
+        advance_through_events(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 20.0, Round::Up).0),
+        );
 
         assert_eq!(collider.get_overlaps(0), vec![1.into()]);
         assert_eq!(collider.get_overlaps(1), vec![0.into()]);
@@ -888,54 +1031,66 @@ pub(crate) mod test_serde {
     #[test]
     fn test_query_overlaps() {
         let mut collider = Collider::<TestHbProfile>::new(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(0.25).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
         );
 
         collider.add_hitbox(
             0.into(),
-            Shape::square(BigRational::from_float(2.0).unwrap())
-                .place(v2(
-                    BigRational::from_float(-5.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                ))
-                .moving(v2(
-                    BigRational::from_float(1.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                )),
+            Shape::square(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), -5.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            ))
+            .moving(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            )),
         );
         collider.add_hitbox(
             1.into(),
-            Shape::circle(BigRational::from_float(2.0).unwrap())
-                .place(v2(
-                    BigRational::from_float(0.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                ))
-                .still(),
+            Shape::circle(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            ))
+            .still(),
         );
         collider.add_hitbox(
             2.into(),
-            Shape::circle(BigRational::from_float(2.0).unwrap())
-                .place(v2(
-                    BigRational::from_float(10.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                ))
-                .moving(v2(
-                    BigRational::from_float(-1.0).unwrap(),
-                    BigRational::from_float(0.0).unwrap(),
-                )),
+            Shape::circle(OrdFloat::from(
+                Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            ))
+            .moving(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            )),
         );
 
-        let test_shape = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-            BigRational::from_float(-1.0).unwrap(),
-            BigRational::from_float(0.5).unwrap(),
+        let test_shape = Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0),
         ));
         assert_eq!(
             collider.query_overlaps(&test_shape, &5.into()),
             vec![1.into()]
         );
 
-        advance(&mut collider, BigRational::from_float(3.0).unwrap());
+        advance(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0),
+        );
         assert_eq!(
             sort(collider.query_overlaps(&test_shape, &5.into())),
             vec![0.into(), 1.into()]
@@ -949,41 +1104,51 @@ pub(crate) mod test_serde {
     #[test]
     fn test_separate_initial_overlap() {
         let mut collider = Collider::<TestHbProfile>::new(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(0.25).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0),
         );
 
         let overlaps = collider.add_hitbox(
             0.into(),
-            Shape::square(BigRational::from_float(1.).unwrap())
-                .place(v2(
-                    BigRational::from_float(0.).unwrap(),
-                    BigRational::from_float(0.).unwrap(),
-                ))
-                .moving(v2(
-                    BigRational::from_float(0.0).unwrap(),
-                    BigRational::from_float(1.).unwrap(),
-                )),
+            Shape::square(OrdFloat::from(
+                Float::with_val_round(prec_max(), 1., Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+            ))
+            .moving(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1., Round::Up).0),
+            )),
         );
         assert_eq!(overlaps, vec![]);
         let overlaps = collider.add_hitbox(
             1.into(),
-            Shape::square(BigRational::from_float(1.).unwrap())
-                .place(v2(
-                    BigRational::from_float(0.).unwrap(),
-                    BigRational::from_float(0.).unwrap(),
-                ))
-                .still(),
+            Shape::square(OrdFloat::from(
+                Float::with_val_round(prec_max(), 1., Round::Up).0,
+            ))
+            .place(v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0., Round::Up).0),
+            ))
+            .still(),
         );
         assert_eq!(overlaps, vec![0.into()]);
 
-        advance_to_event(&mut collider, BigRational::from_float(1.25).unwrap());
+        advance_to_event(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0),
+        );
         assert_eq!(
             collider.next(),
             Some((HbEvent::Separate, 0.into(), 1.into()))
         );
 
-        advance(&mut collider, BigRational::from_float(1.5).unwrap());
+        advance(
+            &mut collider,
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.5, Round::Up).0),
+        );
 
         let serialized = serialize(&collider).unwrap();
         let duplicate: Collider<TestHbProfile> = deserialize(&serialized).unwrap();

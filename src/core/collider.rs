@@ -19,7 +19,10 @@ use crate::core::{HbGroup, HbId, HbProfile, HbVel, Hitbox};
 use crate::geom::PlacedShape;
 use crate::util::TightSet;
 use fnv::FnvHashMap;
-use num::BigRational;
+use rug::{
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 use std::mem;
 
 #[cfg(feature = "enable_serde")]
@@ -37,9 +40,9 @@ use self::serde::*;
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Collider<P: HbProfile> {
     hitboxes: FnvHashMap<HbId, HitboxInfo<P>>,
-    time: BigRational,
+    time: OrdFloat,
     grid: Grid,
-    padding: BigRational,
+    padding: OrdFloat,
     events: EventManager,
 }
 
@@ -64,15 +67,17 @@ impl<P: HbProfile> Collider<P> {
     ///
     /// Another restriction introduced by `padding` is that hitboxes are not
     /// allowed to have a width or height smaller than `padding`.
-    pub fn new(cell_width: BigRational, padding: BigRational) -> Collider<P> {
+    pub fn new(cell_width: OrdFloat, padding: OrdFloat) -> Collider<P> {
         assert!(cell_width > padding, "requires cell_width > padding");
         assert!(
-            padding > BigRational::from_float(0.0).unwrap(),
+            padding > OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
             "requires padding > 0.0"
         );
         Collider {
             hitboxes: FnvHashMap::default(),
-            time: BigRational::from_float(0.0).unwrap(),
+            time: OrdFloat::from(OrdFloat::from(
+                Float::with_val_round(prec_max(), 0.0, Round::Up).0,
+            )),
             grid: Grid::new(cell_width),
             padding,
             events: EventManager::new(),
@@ -80,7 +85,7 @@ impl<P: HbProfile> Collider<P> {
     }
 
     /// Returns the current simulation time.
-    pub fn time(&self) -> BigRational {
+    pub fn time(&self) -> OrdFloat {
         self.time
     }
 
@@ -93,7 +98,7 @@ impl<P: HbProfile> Collider<P> {
     /// `self.time()` again.
     ///
     /// This is a fast constant-time operation.  The result may be infinity.
-    pub fn next_time(&self) -> BigRational {
+    pub fn next_time(&self) -> OrdFloat {
         self.events.peek_time()
     }
 
@@ -105,7 +110,7 @@ impl<P: HbProfile> Collider<P> {
     ///
     /// The hitboxes are updated implicitly, and this is actually a
     /// fast constant-time operation.
-    pub fn set_time(&mut self, time: BigRational) {
+    pub fn set_time(&mut self, time: OrdFloat) {
         assert!(time >= self.time, "cannot rewind time");
         assert!(time <= self.next_time(), "time must not exceed next_time()");
         self.time = time;
@@ -163,7 +168,7 @@ impl<P: HbProfile> Collider<P> {
                         .hitbox_at_time(self.time)
                         .collide_time(&hitbox_info_2.hitbox_at_time(self.time));
                     self.events.add_pair_event(
-                        self.time + delay,
+                        OrdFloat::from(Float::with_val_round(prec_max(), self.time.as_float() + delay.as_float(), Round::Up).0),
                         InternalEvent::Collide(id_1, id_2),
                         &mut hitbox_info_1.event_keys,
                         &mut hitbox_info_2.event_keys,
@@ -191,8 +196,8 @@ impl<P: HbProfile> Collider<P> {
         id_2: HbId,
         hb_2: &mut HitboxInfo<P>,
         events: &mut EventManager,
-        time: BigRational,
-        padding: BigRational,
+        time: OrdFloat,
+        padding: OrdFloat,
     ) {
         assert!(hb_1.overlaps.insert(id_2));
         assert!(hb_2.overlaps.insert(id_1));
@@ -334,7 +339,7 @@ impl<P: HbProfile> Collider<P> {
                 let delay =
                     new_hitbox.separate_time(&other_info.hitbox_at_time(self.time), self.padding);
                 self.events.add_pair_event(
-                    self.time + delay,
+                    OrdFloat::from(Float::with_val_round(prec_max(), self.time.as_float() + delay.as_float(), Round::Up).0),
                     InternalEvent::Separate(id, other_id),
                     &mut info.event_keys,
                     &mut other_info.event_keys,
@@ -355,7 +360,12 @@ impl<P: HbProfile> Collider<P> {
                     let other_info = self.hitboxes.get_mut(&other_id).unwrap();
                     if info.profile.can_interact(&other_info.profile) {
                         let delay = new_hitbox.collide_time(&other_info.hitbox_at_time(self.time));
-                        if old_hitbox.is_none() && delay == BigRational::from_float(0.0).unwrap() {
+                        if old_hitbox.is_none()
+                            && delay
+                                == OrdFloat::from(
+                                    Float::with_val_round(prec_max(), 0.0, Round::Up).0,
+                                )
+                        {
                             result.push(other_info.profile);
                             Collider::process_collision(
                                 id,
@@ -368,7 +378,7 @@ impl<P: HbProfile> Collider<P> {
                             );
                         } else {
                             self.events.add_pair_event(
-                                self.time + delay,
+                                OrdFloat::from(Float::with_val_round(prec_max(), self.time.as_float() + delay.as_float(), Round::Up).0),
                                 InternalEvent::Collide(id, other_id),
                                 &mut info.event_keys,
                                 &mut other_info.event_keys,
@@ -402,20 +412,26 @@ impl<P: HbProfile> Collider<P> {
         hitbox_info: &mut HitboxInfo<P>,
         has_group: bool,
     ) {
-        hitbox_info.pub_end_time = hitbox_info.hitbox.vel.end_time;
+        hitbox_info.pub_end_time = OrdFloat::from(hitbox_info.hitbox.vel.end_time);
         let mut result = (
             self.time + self.grid.cell_period(&hitbox_info.hitbox, has_group),
             InternalEvent::Reiterate(id),
         );
         let end_time = hitbox_info.hitbox.vel.end_time;
-        if end_time < result.0 {
-            result = (end_time, InternalEvent::PanicDurationPassed(id));
+        if &end_time < result.0.as_ord() {
+            result = (
+                OrdFloat::from(end_time),
+                InternalEvent::PanicDurationPassed(id),
+            );
         }
         let end_time = self.time + hitbox_info.hitbox.time_until_too_small(self.padding);
-        if end_time < result.0 {
-            result = (end_time, InternalEvent::PanicSmallHitbox(id));
+        if end_time.as_ord() < result.0.as_ord() {
+            result = (
+                OrdFloat::from(end_time),
+                InternalEvent::PanicSmallHitbox(id),
+            );
         }
-        hitbox_info.hitbox.vel.end_time = result.0;
+        hitbox_info.hitbox.vel.end_time = OrdFloat::from(result.0);
         self.events
             .add_solitaire_event(result.0, result.1, &mut hitbox_info.event_keys);
     }
@@ -462,14 +478,14 @@ impl<P: HbProfile> EventKeysMap for FnvHashMap<HbId, HitboxInfo<P>> {
 struct HitboxInfo<P: HbProfile> {
     profile: P,
     hitbox: Hitbox,
-    start_time: BigRational,
-    pub_end_time: BigRational,
+    start_time: OrdFloat,
+    pub_end_time: OrdFloat,
     event_keys: TightSet<EventKey>,
     overlaps: TightSet<HbId>,
 }
 
 impl<P: HbProfile> HitboxInfo<P> {
-    fn new(hitbox: Hitbox, profile: P, start_time: BigRational) -> HitboxInfo<P> {
+    fn new(hitbox: Hitbox, profile: P, start_time: OrdFloat) -> HitboxInfo<P> {
         HitboxInfo {
             profile,
             pub_end_time: hitbox.vel.end_time,
@@ -480,7 +496,7 @@ impl<P: HbProfile> HitboxInfo<P> {
         }
     }
 
-    fn hitbox_at_time(&self, time: BigRational) -> DurHitbox {
+    fn hitbox_at_time(&self, time: OrdFloat) -> DurHitbox {
         assert!(
             time >= self.start_time && time <= self.hitbox.vel.end_time,
             "invalid time"
@@ -490,7 +506,7 @@ impl<P: HbProfile> HitboxInfo<P> {
         result.to_dur_hitbox(time)
     }
 
-    fn pub_hitbox_at_time(&self, time: BigRational) -> Hitbox {
+    fn pub_hitbox_at_time(&self, time: OrdFloat) -> Hitbox {
         assert!(
             time >= self.start_time && time <= self.pub_end_time,
             "invalid time"

@@ -19,10 +19,13 @@ use self::serde::*;
 
 pub use self::one_or_two::OneOrTwo;
 use fnv::FnvHashSet;
-use num::{BigInt, BigRational, One, Signed, Zero};
+use rug::{
+    float,
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 use std::borrow::Borrow;
 use std::collections::{hash_set, HashSet};
-use std::f64;
 use std::hash::Hash;
 
 /// # Calculates the approximate square root of the value
@@ -31,7 +34,7 @@ use std::hash::Hash;
 /// `Ok(_)`, then it is guaranteed to be within `epsilon` of the actual
 /// answer.  If `epsilon <= 0.0`, then `Err` is returned (the reason for the
 /// bound of `0.0` is because the approximation algorithm is unable to return an
-/// exact answer).  If `value < 0.0`, then `Err` is returned (`BigRational` is
+/// exact answer).  If `value < 0.0`, then `Err` is returned (`OrdFloat` is
 /// a real valued object; it cannot represent complex values).  In both `Err`
 /// cases, the value will be a `String` explaining what the error actually is.
 ///
@@ -49,15 +52,15 @@ use std::hash::Hash;
 /// a value that is within `± epsilon` of the actual value.  If anything went
 /// wrong, then `Err(_)` will be returned, containing a `String` outlining what
 /// the problem was.
-pub fn approx_square_root(value: BigRational, epsilon: BigRational) -> Result<BigRational, String> {
-    if value < BigRational::zero() {
+pub fn approx_square_root(value: OrdFloat, epsilon: OrdFloat) -> Result<OrdFloat, String> {
+    if value < OrdFloat::new(prec_max()) {
         return Err(format!(
             "approx_square_root() cannot calculate the square \
              root of negative values.  value = {}",
             value
         )
         .to_owned());
-    } else if epsilon <= BigRational::zero() {
+    } else if epsilon <= OrdFloat::new(prec_max()) {
         return Err(format!(
             "approx_square_root() cannot calculate the square \
              root with a non-positive epsilon.  \
@@ -77,14 +80,15 @@ pub fn approx_square_root(value: BigRational, epsilon: BigRational) -> Result<Bi
     // Calculates seed values for all values >= 1.0.  This is used below when
     // calculating the seed value.
     #[inline]
-    fn calc_seed(value: &BigRational) -> BigRational {
+    fn calc_seed(value: &OrdFloat) -> OrdFloat {
         let bits = value.ceil().to_integer().bits();
         let half_bits = bits / 2;
-        let approximate = BigInt::one() << half_bits;
-        BigRational::from_integer(approximate)
+        let approximate =
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0 << half_bits);
+        OrdFloat::from(Float::with_val_round(prec_max(), approximate, Round::Up).0)
     };
 
-    let mut x = if value >= BigRational::one() {
+    let mut x = if value >= OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0) {
         calc_seed(&value)
     } else {
         // Because the value is less than one, I can't use the trick above
@@ -98,14 +102,16 @@ pub fn approx_square_root(value: BigRational, epsilon: BigRational) -> Result<Bi
     // to make it easier to do the calculations.
 
     #[inline]
-    fn calc_next_x(value: BigRational, x: BigRational) -> BigRational {
-        let two = BigRational::one() + BigRational::one();
+    fn calc_next_x(value: OrdFloat, x: OrdFloat) -> OrdFloat {
+        let two = OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
+            + OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0);
         (x + (value / x)) / two
     };
 
     #[inline]
-    fn calc_approx_error(value: BigRational, x: BigRational) -> BigRational {
-        let two = BigRational::one() + BigRational::one();
+    fn calc_approx_error(value: OrdFloat, x: OrdFloat) -> OrdFloat {
+        let two = OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
+            + OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0);
         ((value - (x * x)) / (x * two)).abs()
     }
 
@@ -136,7 +142,7 @@ pub fn approx_square_root(value: BigRational, epsilon: BigRational) -> Result<Bi
 ///
 /// If `epsilon > 0.0`, then the sine of `angle` is returned within an `Ok(_)`
 /// variant.  Otherwise an error string is returned.
-pub fn approx_sine(angle: BigRational, epsilon: BigRational) -> Result<BigRational, String> {
+pub fn approx_sine(angle: OrdFloat, epsilon: OrdFloat) -> Result<OrdFloat, String> {
     // FIXME: I know that I should use the CORDIC algorithm to calculate this
     // correctly, but I don't have time to do that right now.  So, references,
     // followed by a hack
@@ -169,7 +175,7 @@ pub fn approx_sine(angle: BigRational, epsilon: BigRational) -> Result<BigRation
 ///
 /// If `epsilon > 0.0`, then the cosine of `angle` is returned within an `Ok(_)`
 /// variant.  Otherwise an error string is returned.
-pub fn approx_cosine(angle: BigRational, epsilon: BigRational) -> Result<BigRational, String> {
+pub fn approx_cosine(angle: OrdFloat, epsilon: OrdFloat) -> Result<OrdFloat, String> {
     // References for the algorithm I use.
     //
     // https://pdfs.semanticscholar.org/f2a6/eef864d928b462ca2d9f7db19b4078584bf4.pdf
@@ -190,14 +196,14 @@ pub fn approx_cosine(angle: BigRational, epsilon: BigRational) -> Result<BigRati
     // error bounds for it.  Thus, there isn't any point in implementing it
     // right now.
 
-    let half_pi = BigRational::from_float(f64::PI / 2.0);
+    let half_pi = float::Constant::Pi;
     if (angle > half_pi) || (angle < -half_pi) {
         return Err(format!(
             "approx_cosine() can only handle values in the range \
              [{}, {}], but the value {} was passed in.",
             half_pi, -half_pi, angle
         ));
-    } else if epsilon <= BigRational::zero() {
+    } else if epsilon <= OrdFloat::new(prec_max()) {
         return Err(format!(
             "approx_cosine() requires a positive epsilon.  \
              epsilon was {}.",
@@ -226,20 +232,22 @@ pub fn approx_cosine(angle: BigRational, epsilon: BigRational) -> Result<BigRati
 }
 
 // returns the ascending root of a quadratic polynomial ax^2 + bx + c
-pub fn quad_root_ascending(a: BigRational, b: BigRational, c: BigRational) -> Option<BigRational> {
-    let determinant = b * b - a * c * BigRational::from_float(4.0).unwrap();
-    let epsilon = determinant / BigRational::from_float(1000000.0).unwrap();
-    if determinant <= BigRational::from_float(0.0).unwrap() {
+pub fn quad_root_ascending(a: OrdFloat, b: OrdFloat, c: OrdFloat) -> Option<OrdFloat> {
+    let determinant =
+        b * b - a * c * OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0);
+    let epsilon =
+        determinant / OrdFloat::from(Float::with_val_round(prec_max(), 1000000.0, Round::Up).0);
+    if determinant <= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
         None
-    } else if b >= BigRational::from_float(0.0).unwrap() {
+    } else if b >= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
         Some(
-            (c * BigRational::from_float(2.0).unwrap())
+            (c * OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0))
                 / (-b - approx_square_root(determinant, epsilon).unwrap()),
         )
     } else {
         Some(
             (-b + approx_square_root(determinant, epsilon).unwrap())
-                / (a * BigRational::from_float(2.0).unwrap()),
+                / (a * OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0)),
         )
     }
 }
@@ -370,54 +378,54 @@ mod tests {
     fn test_quad_root_ascending() {
         assert!(
             (quad_root_ascending(
-                BigRational::from_float(1e-14).unwrap(),
-                BigRational::from_float(2.0).unwrap(),
-                BigRational::from_float(-1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1e-14, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             )
             .unwrap()
-                - BigRational::from_float(0.5).unwrap())
+                - OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0))
             .abs()
-                < BigRational::from_float(1e-7)
+                < OrdFloat::from(Float::with_val_round(prec_max(), 1e-7, Round::Up).0)
         );
         assert!(
             (quad_root_ascending(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(2.0).unwrap(),
-                BigRational::from_float(-1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             )
             .unwrap()
-                - BigRational::from_float(0.5).unwrap())
+                - OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0))
             .abs()
-                < BigRational::from_float(1e-7)
+                < OrdFloat::from(Float::with_val_round(prec_max(), 1e-7, Round::Up).0)
         );
         assert!(
             (quad_root_ascending(
-                BigRational::from_float(100.0).unwrap(),
-                BigRational::from_float(-1.0).unwrap(),
-                BigRational::from_float(-1e-16).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 100.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1e-16, Round::Up).0)
             )
             .unwrap()
-                - BigRational::from_float(0.01).unwrap())
+                - OrdFloat::from(Float::with_val_round(prec_max(), 0.01, Round::Up).0))
             .abs()
-                < BigRational::from_float(1e-7)
+                < OrdFloat::from(Float::with_val_round(prec_max(), 1e-7, Round::Up).0)
         );
         assert!(quad_root_ascending(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(-2.0).unwrap(),
-            BigRational::from_float(1.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
         )
         .unwrap()
         .is_infinite());
         assert!(quad_root_ascending(
-            BigRational::from_float(-3.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(-1.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), -3.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
         )
         .is_none());
         assert!(quad_root_ascending(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(1.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
         )
         .is_none());
     }

@@ -14,7 +14,10 @@
 
 use crate::geom::shape::{PlacedBounds, Sector};
 use crate::geom::*;
-use num::BigRational;
+use rug::{
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 
 // This module contains methods to solve for the normal vector
 // between two PlacedShapes.
@@ -32,15 +35,17 @@ pub fn rect_rect_normal(dst: &PlacedShape, src: &PlacedShape) -> DirVec2 {
 pub fn circle_circle_normal(dst: &PlacedShape, src: &PlacedShape) -> DirVec2 {
     let mut dir = dst.pos - src.pos;
     let dist = dir.len();
-    if dist == BigRational::from_float(0.0).unwrap() {
+    if dist == OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
         dir = v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         );
     }
     DirVec2::new(
         dir,
-        (src.dims().x + dst.dims().x) * BigRational::from_float(0.5).unwrap() - dist,
+        (src.dims().x + dst.dims().x)
+            * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0)
+            - dist,
     )
 }
 
@@ -50,7 +55,9 @@ pub fn rect_circle_normal(dst: &PlacedShape, src: &PlacedShape) -> DirVec2 {
         circle_circle_normal(
             &PlacedShape::new(
                 dst.corner(sector),
-                Shape::circle(BigRational::from_float(0.0).unwrap()),
+                Shape::circle(OrdFloat::from(
+                    Float::with_val_round(prec_max(), 0.0, Round::Up).0,
+                )),
             ),
             src,
         )
@@ -88,7 +95,9 @@ pub fn masked_rect_circle_normal(dst: &PlacedShape, src: &PlacedShape, mask: Car
         circle_circle_normal(
             &PlacedShape::new(
                 dst.corner(sector),
-                Shape::circle(BigRational::from_float(0.0).unwrap()),
+                Shape::circle(OrdFloat::from(
+                    Float::with_val_round(prec_max(), 0.0, Round::Up).0,
+                )),
             ),
             src,
         )
@@ -107,7 +116,10 @@ fn mask_has_corner_sector(sector: Sector, mask: CardMask) -> bool {
 
 pub fn circle_any_contact(a: &PlacedShape, b: &PlacedShape) -> Vec2 {
     let normal = a.normal_from(b);
-    a.pos + normal.dir() * (normal.len() - a.shape.dims().x) * BigRational::from_float(0.5).unwrap()
+    a.pos
+        + normal.dir()
+            * (normal.len() - a.shape.dims().x)
+            * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0)
 }
 
 pub fn rect_rect_contact(a: &PlacedShape, b: &PlacedShape) -> Vec2 {
@@ -118,10 +130,11 @@ pub fn rect_rect_contact(a: &PlacedShape, b: &PlacedShape) -> Vec2 {
 }
 
 fn rect_rect_contact_1d(
-    a_min: BigRational,
-    a_max: BigRational,
-    b_min: BigRational,
-    b_max: BigRational,
-) -> BigRational {
-    BigRational::from_float(0.5).unwrap() * (a_min.max(b_min) + b_max.min(a_max))
+    a_min: OrdFloat,
+    a_max: OrdFloat,
+    b_min: OrdFloat,
+    b_max: OrdFloat,
+) -> OrdFloat {
+    OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0)
+        * (a_min.max(b_min) + b_max.min(a_max))
 }

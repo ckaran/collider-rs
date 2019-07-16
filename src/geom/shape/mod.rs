@@ -14,7 +14,10 @@
 
 use crate::core::{HbVel, Hitbox};
 use crate::geom::{v2, Card, CardMask, DirVec2, Vec2};
-use num::{BigRational, Signed};
+use rug::{
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 use std::cmp::Ordering;
 
 mod normals;
@@ -54,8 +57,8 @@ impl Shape {
     /// and height must match.
     pub fn new(kind: ShapeKind, dims: Vec2) -> Shape {
         assert!(
-            dims.x >= BigRational::from_float(0.0).unwrap()
-                && dims.y >= BigRational::from_float(0.0).unwrap(),
+            dims.x >= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
+                && dims.y >= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
             "dims must be non-negative"
         );
         Shape::with_any_dims(kind, dims)
@@ -71,7 +74,7 @@ impl Shape {
 
     /// Constructs a new circle shape, using `diam` as the width and height.
     #[inline]
-    pub fn circle(diam: BigRational) -> Shape {
+    pub fn circle(diam: OrdFloat) -> Shape {
         Shape::new(ShapeKind::Circle, v2(diam, diam))
     }
 
@@ -84,7 +87,7 @@ impl Shape {
 
     /// Constructs a new axis-aligned square shape with the given `width`.
     #[inline]
-    pub fn square(width: BigRational) -> Shape {
+    pub fn square(width: OrdFloat) -> Shape {
         Shape::new(ShapeKind::Rect, v2(width, width))
     }
 
@@ -106,7 +109,7 @@ impl Shape {
         PlacedShape::new(pos, self)
     }
 
-    pub(crate) fn advance(&self, resize_vel: Vec2, elapsed: BigRational) -> Shape {
+    pub(crate) fn advance(&self, resize_vel: Vec2, elapsed: OrdFloat) -> Shape {
         Shape::with_any_dims(self.kind, self.dims + resize_vel * elapsed)
     }
 }
@@ -141,29 +144,30 @@ impl PlacedShape {
     }
 
     /// Returns the lowest x coordinate of the `PlacedShape`.
-    pub fn min_x(&self) -> BigRational {
+    pub fn min_x(&self) -> OrdFloat {
         self.bounds_left()
     }
 
     /// Returns the lowest y coordinate of the `PlacedShape`.
-    pub fn min_y(&self) -> BigRational {
+    pub fn min_y(&self) -> OrdFloat {
         self.bounds_bottom()
     }
 
     /// Returns the highest x coordinate of the `PlacedShape`.
-    pub fn max_x(&self) -> BigRational {
+    pub fn max_x(&self) -> OrdFloat {
         self.bounds_right()
     }
 
     /// Returns the highest y coordinate of the `PlacedShape`.
-    pub fn max_y(&self) -> BigRational {
+    pub fn max_y(&self) -> OrdFloat {
         self.bounds_top()
     }
 
     /// Returns `true` if the two shapes overlap, subject to negligible
     /// numerical error.
     pub fn overlaps(&self, other: &PlacedShape) -> bool {
-        self.normal_from(other).len() >= BigRational::from_float(0.0).unwrap()
+        self.normal_from(other).len()
+            >= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
     }
 
     /// Returns a normal vector that points in the direction from `other` to
@@ -231,7 +235,7 @@ impl PlacedShape {
 
     /// Shorthand for `Hitbox::new(self, HbVel::moving_until(vel, end_time))`.
     #[inline]
-    pub fn moving_until(self, vel: Vec2, end_time: BigRational) -> Hitbox {
+    pub fn moving_until(self, vel: Vec2, end_time: OrdFloat) -> Hitbox {
         Hitbox::new(self, HbVel::moving_until(vel, end_time))
     }
 
@@ -243,7 +247,7 @@ impl PlacedShape {
 
     /// Shorthand for `Hitbox::new(self, HbVel::still_until(end_time))`.
     #[inline]
-    pub fn still_until(self, end_time: BigRational) -> Hitbox {
+    pub fn still_until(self, end_time: OrdFloat) -> Hitbox {
         Hitbox::new(self, HbVel::still_until(end_time))
     }
 
@@ -265,13 +269,16 @@ impl PlacedShape {
 
         let shape = Shape::rect(v2(right - left, top - bottom));
         let pos = v2(
-            left + shape.dims().x * BigRational::from_float(0.5).unwrap(),
-            bottom + shape.dims().y * BigRational::from_float(0.5).unwrap(),
+            left + shape.dims().x
+                * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0),
+            bottom
+                + shape.dims().y
+                    * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0),
         );
         PlacedShape::new(pos, shape)
     }
 
-    pub(crate) fn advance(&self, vel: Vec2, resize_vel: Vec2, elapsed: BigRational) -> PlacedShape {
+    pub(crate) fn advance(&self, vel: Vec2, resize_vel: Vec2, elapsed: OrdFloat) -> PlacedShape {
         PlacedShape::new(
             self.pos + vel * elapsed,
             self.shape.advance(resize_vel, elapsed),
@@ -283,20 +290,28 @@ pub(crate) trait PlacedBounds {
     fn bounds_center(&self) -> &Vec2;
     fn bounds_dims(&self) -> &Vec2;
 
-    fn bounds_bottom(&self) -> BigRational {
-        self.bounds_center().y - self.bounds_dims().y * BigRational::from_float(0.5).unwrap()
+    fn bounds_bottom(&self) -> OrdFloat {
+        self.bounds_center().y
+            - self.bounds_dims().y
+                * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0)
     }
-    fn bounds_left(&self) -> BigRational {
-        self.bounds_center().x - self.bounds_dims().x * BigRational::from_float(0.5).unwrap()
+    fn bounds_left(&self) -> OrdFloat {
+        self.bounds_center().x
+            - self.bounds_dims().x
+                * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0)
     }
-    fn bounds_top(&self) -> BigRational {
-        self.bounds_center().y + self.bounds_dims().y * BigRational::from_float(0.5).unwrap()
+    fn bounds_top(&self) -> OrdFloat {
+        self.bounds_center().y
+            + self.bounds_dims().y
+                * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0)
     }
-    fn bounds_right(&self) -> BigRational {
-        self.bounds_center().x + self.bounds_dims().x * BigRational::from_float(0.5).unwrap()
+    fn bounds_right(&self) -> OrdFloat {
+        self.bounds_center().x
+            + self.bounds_dims().x
+                * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0)
     }
 
-    fn edge(&self, card: Card) -> BigRational {
+    fn edge(&self, card: Card) -> OrdFloat {
         match card {
             Card::MinusY => -self.bounds_bottom(),
             Card::MinusX => -self.bounds_left(),
@@ -305,7 +320,7 @@ pub(crate) trait PlacedBounds {
         }
     }
 
-    fn max_edge(&self) -> BigRational {
+    fn max_edge(&self) -> OrdFloat {
         Card::values()
             .iter()
             .map(|&card| self.edge(card).abs())
@@ -313,7 +328,7 @@ pub(crate) trait PlacedBounds {
             .unwrap()
     }
 
-    fn card_overlap(&self, src: &Self, card: Card) -> BigRational {
+    fn card_overlap(&self, src: &Self, card: Card) -> OrdFloat {
         src.edge(card) + self.edge(card.flip())
     }
 
@@ -341,7 +356,7 @@ impl PlacedBounds for PlacedShape {
     }
 }
 
-fn interval_sector(left: BigRational, right: BigRational, val: BigRational) -> Ordering {
+fn interval_sector(left: OrdFloat, right: OrdFloat, val: OrdFloat) -> Ordering {
     if val < left {
         Ordering::Less
     } else if val > right {
@@ -426,8 +441,8 @@ fn test_serde_shape_kind() {
 #[test]
 fn test_serde_shape() {
     {
-        let x = BigRational::from_float(1.0).unwrap();
-        let y = BigRational::from_float(1.0).unwrap();
+        let x = OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0);
+        let y = OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0);
         let vec = Vec2::new(x, y);
         let original = Shape::new(ShapeKind::Circle, vec);
 
@@ -437,8 +452,8 @@ fn test_serde_shape() {
     }
 
     {
-        let x = BigRational::from_float(1.0).unwrap();
-        let y = BigRational::from_float(3.0).unwrap();
+        let x = OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0);
+        let y = OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0);
         let vec = Vec2::new(x, y);
         let original = Shape::new(ShapeKind::Rect, vec);
 
@@ -453,14 +468,14 @@ fn test_serde_shape() {
 fn test_serde_placed_shape() {
     let original: PlacedShape = PlacedShape::new(
         Vec2::new(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(3.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0),
         ),
         Shape::new(
             ShapeKind::Circle,
             Vec2::new(
-                BigRational::from_float(5.0).unwrap(),
-                BigRational::from_float(5.0).unwrap(),
+                OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
             ),
         ),
     );

@@ -18,10 +18,13 @@ use crate::geom::shape::{PlacedBounds, PlacedShape};
 use crate::index_rect::IndexRect;
 use crate::util::TightSet;
 use fnv::{FnvHashMap, FnvHashSet};
-use num::{BigRational, ToPrimitive};
+use rug::{
+    float,
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 use std::cmp;
 use std::collections::hash_map;
-use std::f64;
 
 #[cfg(feature = "enable_serde")]
 extern crate serde;
@@ -57,27 +60,27 @@ impl GridArea {
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Grid {
     map: FnvHashMap<GridKey, TightSet<HbId>>,
-    cell_width: BigRational,
+    cell_width: OrdFloat,
 }
 
 impl Grid {
-    pub fn new(cell_width: BigRational) -> Grid {
+    pub fn new(cell_width: OrdFloat) -> Grid {
         Grid {
             map: FnvHashMap::default(),
             cell_width,
         }
     }
 
-    pub fn cell_period(&self, hitbox: &Hitbox, has_group: bool) -> BigRational {
+    pub fn cell_period(&self, hitbox: &Hitbox, has_group: bool) -> OrdFloat {
         if has_group {
             let speed = hitbox.vel.max_edge();
-            if speed <= BigRational::from_float(0.0).unwrap() {
-                BigRational::from_float(f64::INFINITY).unwrap()
+            if speed <= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
+                OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
             } else {
                 self.cell_width / speed
             }
         } else {
-            BigRational::from_float(f64::INFINITY).unwrap()
+            OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
         }
     }
 

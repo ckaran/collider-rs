@@ -13,29 +13,38 @@
 // limitations under the License.
 
 use crate::geom::*;
-use num::BigRational;
+use rug::{
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 
 #[test]
 fn test_circle_advance() {
-    let shape_1 = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-        BigRational::from_float(3.0).unwrap(),
-        BigRational::from_float(5.0).unwrap(),
+    let shape_1 = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
     ));
     assert_eq!(
         shape_1.advance(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(2.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0)
             ),
             v2(
-                BigRational::from_float(-0.25),
-                BigRational::from_float(-0.25)
+                OrdFloat::from(Float::with_val_round(prec_max(), -0.25, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -0.25, Round::Up).0)
             ),
-            BigRational::from_float(2.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0)
         ),
-        Shape::circle(BigRational::from_float(1.5).unwrap()).place(v2(
-            BigRational::from_float(5.0).unwrap(),
-            BigRational::from_float(9.0).unwrap()
+        Shape::circle(OrdFloat::from(
+            Float::with_val_round(prec_max(), 1.5, Round::Up).0
+        ))
+        .place(v2(
+            OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 9.0, Round::Up).0)
         ))
     );
 }
@@ -43,32 +52,32 @@ fn test_circle_advance() {
 #[test]
 fn test_rect_advance() {
     let shape_1 = Shape::rect(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(5.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(3.0).unwrap(),
-        BigRational::from_float(5.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
     ));
     assert_eq!(
         shape_1.advance(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(2.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0)
             ),
             v2(
-                BigRational::from_float(-0.25),
-                BigRational::from_float(1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), -0.25, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
             ),
-            BigRational::from_float(2.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0)
         ),
         Shape::rect(v2(
-            BigRational::from_float(1.5).unwrap(),
-            BigRational::from_float(7.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.5, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 7.0, Round::Up).0)
         ))
         .place(v2(
-            BigRational::from_float(5.0).unwrap(),
-            BigRational::from_float(9.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 9.0, Round::Up).0)
         ))
     );
 }
@@ -76,141 +85,163 @@ fn test_rect_advance() {
 #[test]
 #[should_panic]
 fn test_illegal_circle_advance() {
-    let shape = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-        BigRational::from_float(3.0).unwrap(),
-        BigRational::from_float(5.0).unwrap(),
+    let shape = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
     ));
     shape.advance(
         v2(
-            BigRational::from_float(1.0).unwrap(),
-            BigRational::from_float(2.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
         ),
         v2(
-            BigRational::from_float(-0.25),
-            BigRational::from_float(-0.24),
+            OrdFloat::from(Float::with_val_round(prec_max(), -0.25, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -0.24, Round::Up).0),
         ),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     );
 }
 
 #[test]
 fn test_edges() {
     let shape = Shape::rect(v2(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(6.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 6.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(3.0).unwrap(),
-        BigRational::from_float(5.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 3.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
     ));
-    assert_eq!(shape.min_x(), BigRational::from_float(1.0).unwrap());
-    assert_eq!(shape.min_y(), BigRational::from_float(2.0).unwrap());
-    assert_eq!(shape.max_x(), BigRational::from_float(5.0).unwrap());
-    assert_eq!(shape.max_y(), BigRational::from_float(8.0).unwrap());
+    assert_eq!(
+        shape.min_x(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
+    );
+    assert_eq!(
+        shape.min_y(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0)
+    );
+    assert_eq!(
+        shape.max_x(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0)
+    );
+    assert_eq!(
+        shape.max_y(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0)
+    );
 }
 
 #[test]
 fn test_rect_rect_normal() {
     let src = Shape::rect(v2(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(4.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(1.0).unwrap(),
-        BigRational::from_float(1.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
     ));
     let dst = Shape::rect(v2(
-        BigRational::from_float(8.0).unwrap(),
-        BigRational::from_float(8.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(1.5).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.5, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ),
-            BigRational::from_float(5.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0)
         )
     );
     let dst = Shape::rect(v2(
-        BigRational::from_float(8.0).unwrap(),
-        BigRational::from_float(8.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(0.5).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(-1.0),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ),
-            BigRational::from_float(5.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0)
         )
     );
     let dst = Shape::rect(v2(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(3.8).unwrap(),
-        BigRational::from_float(4.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 3.8, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
             ),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     let dst = Shape::rect(v2(
-        BigRational::from_float(8.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(-2.0),
-        BigRational::from_float(-3.0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -3.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(-1.0)
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             ),
-            BigRational::from_float(-1.0)
+            OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
         )
     );
 }
 
 #[test]
 fn test_circle_circle_normal() {
-    let src = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-        BigRational::from_float(1.0).unwrap(),
-        BigRational::from_float(1.0).unwrap(),
+    let src = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
     ));
-    let dst = Shape::circle(BigRational::from_float(3.0).unwrap()).place(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 3.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(-1.0)
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             ),
-            BigRational::from_float(2.5).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
+            OrdFloat::from(Float::with_val_round(prec_max(), 2.5, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
         )
     );
 }
@@ -218,122 +249,153 @@ fn test_circle_circle_normal() {
 #[test]
 fn test_rect_circle_normal() {
     let src = Shape::rect(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     ));
 
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(-2.0),
-        BigRational::from_float(0.0).unwrap(),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(-1.0),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ),
-            BigRational::from_float(0.25).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0)
         )
     );
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(-2.0),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(-1.0)
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             ),
-            BigRational::from_float(0.25).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0)
         )
     );
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ),
-            BigRational::from_float(0.25).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0)
         )
     );
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
             ),
-            BigRational::from_float(0.25).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0)
         )
     );
 
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(-2.0),
-        BigRational::from_float(-2.0),
-    ));
-    assert_eq!(
-        dst.normal_from(&src),
-        DirVec2::new(
-            v2(BigRational::from_float(-1.0), BigRational::from_float(-1.0)),
-            BigRational::from_float(1.25).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
-        )
-    );
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(-2.0),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(-1.0)
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             ),
-            BigRational::from_float(1.25).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
         )
     );
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(-2.0),
-        BigRational::from_float(2.0).unwrap(),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(-1.0),
-                BigRational::from_float(1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             ),
-            BigRational::from_float(1.25).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
         )
     );
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ));
     assert_eq!(
         dst.normal_from(&src),
         DirVec2::new(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
             ),
-            BigRational::from_float(1.25).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
+        )
+    );
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+    ));
+    assert_eq!(
+        dst.normal_from(&src),
+        DirVec2::new(
+            v2(
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
+            ),
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
         )
     );
 }
@@ -341,30 +403,30 @@ fn test_rect_circle_normal() {
 #[test]
 fn test_masked_rect_rect_normal() {
     let src = Shape::rect(v2(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(4.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(1.0).unwrap(),
-        BigRational::from_float(1.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
     ));
     let dst = Shape::rect(v2(
-        BigRational::from_float(8.0).unwrap(),
-        BigRational::from_float(8.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(6.0).unwrap(),
-        BigRational::from_float(-5.0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 6.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), -5.0, Round::Up).0),
     ));
     let mut mask = CardMask::full();
     assert_eq!(
         dst.masked_normal_from(&src, mask),
         DirVec2::new(
             v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(-1.0)
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             ),
-            BigRational::from_float(0.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
         )
     );
     mask[Card::MinusY] = false;
@@ -372,10 +434,10 @@ fn test_masked_rect_rect_normal() {
         dst.masked_normal_from(&src, mask),
         DirVec2::new(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ),
-            BigRational::from_float(1.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
         )
     );
 }
@@ -383,26 +445,30 @@ fn test_masked_rect_rect_normal() {
 #[test]
 fn test_masked_rect_circle_normal() {
     let src = Shape::rect(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(0.0).unwrap(),
-        BigRational::from_float(0.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
     ));
-    let dst = Shape::circle(BigRational::from_float(2.5).unwrap()).place(v2(
-        BigRational::from_float(-2.0),
-        BigRational::from_float(2.0).unwrap(),
+    let dst = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.5, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ));
     let mut mask = CardMask::full();
     assert_eq!(
         dst.masked_normal_from(&src, mask),
         DirVec2::new(
             v2(
-                BigRational::from_float(-1.0),
-                BigRational::from_float(1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
             ),
-            BigRational::from_float(1.25).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
         )
     );
     mask[Card::PlusX] = false;
@@ -410,20 +476,22 @@ fn test_masked_rect_circle_normal() {
         src.masked_normal_from(&dst, mask.flip()),
         DirVec2::new(
             v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(-1.0)
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
             ),
-            BigRational::from_float(1.25).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
         )
     );
     assert_eq!(
         dst.masked_normal_from(&src, mask),
         DirVec2::new(
             v2(
-                BigRational::from_float(-1.0),
-                BigRational::from_float(1.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
             ),
-            BigRational::from_float(1.25).unwrap() - BigRational::from_float(2.0).unwrap().sqrt()
+            OrdFloat::from(Float::with_val_round(prec_max(), 1.25, Round::Up).0)
+                - OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).sqrt()
         )
     );
     mask[Card::PlusY] = false;
@@ -431,10 +499,10 @@ fn test_masked_rect_circle_normal() {
         dst.masked_normal_from(&src, mask),
         DirVec2::new(
             v2(
-                BigRational::from_float(-1.0),
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             ),
-            BigRational::from_float(0.25).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.25, Round::Up).0)
         )
     );
 }
@@ -442,89 +510,98 @@ fn test_masked_rect_circle_normal() {
 #[test]
 fn test_rect_rect_contact() {
     let a = Shape::rect(v2(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(2.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(10.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0),
     ));
     let b = Shape::rect(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(4.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
     ))
     .place(v2(
-        BigRational::from_float(-2.0),
-        BigRational::from_float(12.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), -2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 12.0, Round::Up).0),
     ));
     assert_eq!(
         a.contact_point(&b),
         v2(
-            BigRational::from_float(0.5).unwrap(),
-            BigRational::from_float(10.5).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 10.5, Round::Up).0)
         )
     );
     assert_eq!(
         b.contact_point(&a),
         v2(
-            BigRational::from_float(0.5).unwrap(),
-            BigRational::from_float(10.5).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 10.5, Round::Up).0)
         )
     );
 }
 
 #[test]
 fn test_circle_circle_contact() {
-    let a = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-        BigRational::from_float(5.0).unwrap(),
-        BigRational::from_float(15.0).unwrap(),
+    let a = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 15.0, Round::Up).0),
     ));
-    let b = Shape::circle(BigRational::from_float(8.0).unwrap()).place(v2(
-        BigRational::from_float(5.0).unwrap(),
-        BigRational::from_float(19.0).unwrap(),
+    let b = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 8.0, Round::Up).0,
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 19.0, Round::Up).0),
     ));
     assert_eq!(
         a.contact_point(&b),
         v2(
-            BigRational::from_float(5.0).unwrap(),
-            BigRational::from_float(15.5).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 15.5, Round::Up).0)
         )
     );
     assert_eq!(
         b.contact_point(&a),
         v2(
-            BigRational::from_float(5.0).unwrap(),
-            BigRational::from_float(15.5).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 15.5, Round::Up).0)
         )
     );
 }
 
 #[test]
 fn test_circle_rect_contact() {
-    let a = Shape::circle(BigRational::from_float(2.0).unwrap()).place(v2(
-        BigRational::from_float(5.0).unwrap(),
-        BigRational::from_float(15.0).unwrap(),
-    ));
-    let b = Shape::rect(v2(
-        BigRational::from_float(4.0).unwrap(),
-        BigRational::from_float(8.0).unwrap(),
+    let a = Shape::circle(OrdFloat::from(
+        Float::with_val_round(prec_max(), 2.0, Round::Up).0,
     ))
     .place(v2(
-        BigRational::from_float(2.0).unwrap(),
-        BigRational::from_float(18.0).unwrap(),
+        OrdFloat::from(Float::with_val_round(prec_max(), 5.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 15.0, Round::Up).0),
+    ));
+    let b = Shape::rect(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 8.0, Round::Up).0),
+    ))
+    .place(v2(
+        OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
+        OrdFloat::from(Float::with_val_round(prec_max(), 18.0, Round::Up).0),
     ));
     assert_eq!(
         a.contact_point(&b),
         v2(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(15.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 15.0, Round::Up).0)
         )
     );
     assert_eq!(
         b.contact_point(&a),
         v2(
-            BigRational::from_float(4.0).unwrap(),
-            BigRational::from_float(15.0).unwrap()
+            OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 15.0, Round::Up).0)
         )
     );
 }

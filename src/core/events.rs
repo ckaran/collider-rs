@@ -14,10 +14,13 @@
 
 use crate::core::HbId;
 use crate::util::{OneOrTwo, TightSet};
-use num::BigRational;
+use rug::{
+    float,
+    float::{prec_max, OrdFloat},
+    Float
+};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
-use std::f64;
 use std::hash::{Hash, Hasher};
 
 #[cfg(feature = "enable_serde")]
@@ -33,12 +36,12 @@ const PAIR_BASE: u64 = 0x8000_0000_0000_0000;
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct EventKey {
-    time: BigRational,
+    time: OrdFloat,
     index: u64,
 }
 
 impl EventKey {
-    fn time(&self) -> BigRational {
+    fn time(&self) -> OrdFloat {
         self.time
     }
 }
@@ -123,7 +126,7 @@ impl EventManager {
 
     pub fn add_solitaire_event(
         &mut self,
-        time: BigRational,
+        time: OrdFloat,
         event: InternalEvent,
         key_set: &mut TightSet<EventKey>,
     ) {
@@ -135,7 +138,7 @@ impl EventManager {
 
     pub fn add_pair_event(
         &mut self,
-        time: BigRational,
+        time: OrdFloat,
         event: InternalEvent,
         first_key_set: &mut TightSet<EventKey>,
         second_key_set: &mut TightSet<EventKey>,
@@ -162,7 +165,7 @@ impl EventManager {
         key_set.clear();
     }
 
-    fn new_event_key(&mut self, time: BigRational, for_pair: bool) -> Option<EventKey> {
+    fn new_event_key(&mut self, time: OrdFloat, for_pair: bool) -> Option<EventKey> {
         let mut index = self.next_event_index;
         self.next_event_index += 1;
         assert!(index < PAIR_BASE);
@@ -173,18 +176,14 @@ impl EventManager {
         Some(result)
     }
 
-    pub fn peek_time(&self) -> BigRational {
-        self.peek_key()
-            .map_or(BigRational::from_float(f64::INFINITY).unwrap(), |key| {
-                key.time()
-            })
+    pub fn peek_time(&self) -> OrdFloat {
+        self.peek_key().map_or(
+            OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity)),
+            |key| key.time(),
+        )
     }
 
-    pub fn next<M: EventKeysMap>(
-        &mut self,
-        time: BigRational,
-        map: &mut M,
-    ) -> Option<InternalEvent> {
+    pub fn next<M: EventKeysMap>(&mut self, time: OrdFloat, map: &mut M) -> Option<InternalEvent> {
         if let Some(key) = self.peek_key() {
             if key.time() == time {
                 let event = self.events.remove(&key).unwrap();

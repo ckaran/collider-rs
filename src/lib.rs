@@ -43,7 +43,7 @@
 //! ```
 //! use collider::{Collider, HbEvent, HbId, HbProfile};
 //! use collider::geom::{Shape, v2};
-//! use num::BigRational;
+//! use rug::{Float, float::{prec_max, Round, OrdFloat}};
 //!
 //! #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash, Debug)]
 //! struct DemoHbProfile { id: HbId } // add any additional identfying data to this struct
@@ -53,18 +53,18 @@
 //!     fn can_interact(&self, _other: &DemoHbProfile) -> bool { true }
 //! }
 //!
-//! let mut collider: Collider<DemoHbProfile> = Collider::new(BigRational::from_float(4.0).unwrap(), BigRational::from_float(0.01).unwrap());
+//! let mut collider: Collider<DemoHbProfile> = Collider::new(OrdFloat::from(Float::with_val_round(prec_max(), 4.0, Round::Up).0, OrdFloat::from(Float::with_val_round(prec_max(), 0.01, Round::Up).0)));
 //!
-//! let hitbox = Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(BigRational::from_float(-10.0).unwrap(), BigRational::from_float(0.0).unwrap())).moving(v2(BigRational::from_float(1.0).unwrap(), BigRational::from_float(0.0).unwrap()));
+//! let hitbox = Shape::square(OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).place(v2(OrdFloat::from(Float::with_val_round(prec_max(), -10.0, Round::Up).0), OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0))).moving(v2(OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0), OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0))));
 //! let overlaps = collider.add_hitbox(DemoHbProfile { id: 0 }, hitbox);
 //! assert!(overlaps.is_empty());
 //!
-//! let hitbox = Shape::square(BigRational::from_float(2.0).unwrap()).place(v2(BigRational::from_float(10.0).unwrap(), BigRational::from_float(0.0).unwrap())).moving(v2(BigRational::from_float(-1.0).unwrap(), BigRational::from_float(0.0).unwrap()));
+//! let hitbox = Shape::square(OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0).place(v2(OrdFloat::from(Float::with_val_round(prec_max(), 10.0, Round::Up).0), OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0))).moving(v2(OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0), OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0))));
 //! let overlaps = collider.add_hitbox(DemoHbProfile { id: 1 }, hitbox);
 //! assert!(overlaps.is_empty());
 //!
-//! while collider.time() < BigRational::from_float(20.0).unwrap() {
-//!     let time = collider.next_time().min(BigRational::from_float(20.0).unwrap());
+//! while collider.time() < OrdFloat::from(Float::with_val_round(prec_max(), 20.0, Round::Up).0) {
+//!     let time = collider.next_time().min(OrdFloat::from(Float::with_val_round(prec_max(), 20.0, Round::Up).0));
 //!     collider.set_time(time);
 //!     if let Some((event, profile_1, profile_2)) = collider.next() {
 //!         println!("{:?} between {:?} and {:?} at time {}.",
@@ -73,7 +73,7 @@
 //!             println!("Speed of collided hitboxes is halved.");
 //!             for profile in [profile_1, profile_2].iter() {
 //!                 let mut hb_vel = collider.get_hitbox(profile.id()).vel;
-//!                 hb_vel.value *= BigRational::from_float(0.5).unwrap();
+//!                 hb_vel.value *= OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0);
 //!                 collider.set_hitbox_vel(profile.id(), hb_vel);
 //!             }
 //!         }
@@ -81,9 +81,9 @@
 //! }
 //!
 //! // the above loop prints the following events:
-//! //   Collide between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time BigRational::from_float(9.).unwrap()
+//! //   Collide between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time OrdFloat::from(Float::with_val_round(prec_max(), 9., Round::Up).0)
 //! //   Speed of collided hitboxes is halved.
-//! //   Separate between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time BigRational::from_float(13.01).unwrap().
+//! //   Separate between DemoHbProfile { id: 0 } and DemoHbProfile { id: 1 } at time OrdFloat::from(Float::with_val_round(prec_max(), 13.01, Round::Up).0).
 //! ```
 
 extern crate fnv;

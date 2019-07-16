@@ -16,24 +16,27 @@ use crate::core::dur_hitbox::DurHitbox;
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
 use crate::util;
-use num::BigRational;
-use std::f64;
+use rug::{
+    float,
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 
 // This module contains methods to solve for the collision/separation time
 // of two hitboxes.
 
-pub fn collide_time(a: &DurHitbox, b: &DurHitbox) -> BigRational {
+pub fn collide_time(a: &DurHitbox, b: &DurHitbox) -> OrdFloat {
     let duration = a.vel.duration.min(b.vel.duration);
     if a.bounding_box_for(duration)
         .overlaps(&b.bounding_box_for(duration))
     {
         time_unpadded(a, b, true, duration)
     } else {
-        BigRational::from_float(f64::INFINITY).unwrap()
+        OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
     }
 }
 
-pub fn separate_time(a: &DurHitbox, b: &DurHitbox, padding: BigRational) -> BigRational {
+pub fn separate_time(a: &DurHitbox, b: &DurHitbox, padding: OrdFloat) -> OrdFloat {
     let (a, b) = match (a.value.kind(), b.value.kind()) {
         (ShapeKind::Rect, ShapeKind::Circle) => (b, a),
         _ => (a, b),
@@ -41,17 +44,14 @@ pub fn separate_time(a: &DurHitbox, b: &DurHitbox, padding: BigRational) -> BigR
     let mut a = *a;
     a.value.shape = Shape::new(
         a.value.kind(),
-        a.value.dims() + v2(padding, padding) * BigRational::from_float(2.0).unwrap(),
+        a.value.dims()
+            + v2(padding, padding)
+                * OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0),
     );
     time_unpadded(&a, b, false, a.vel.duration.min(b.vel.duration))
 }
 
-fn time_unpadded(
-    a: &DurHitbox,
-    b: &DurHitbox,
-    for_collide: bool,
-    duration: BigRational,
-) -> BigRational {
+fn time_unpadded(a: &DurHitbox, b: &DurHitbox, for_collide: bool, duration: OrdFloat) -> OrdFloat {
     let result = match (a.value.kind(), b.value.kind()) {
         (ShapeKind::Rect, ShapeKind::Rect) => rect_rect_time(a, b, for_collide),
         (ShapeKind::Circle, ShapeKind::Circle) => circle_circle_time(a, b, for_collide),
@@ -59,34 +59,37 @@ fn time_unpadded(
         (ShapeKind::Circle, ShapeKind::Rect) => rect_circle_time(b, a, for_collide, duration),
     };
     if result >= duration {
-        BigRational::from_float(f64::INFINITY).unwrap()
+        OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
     } else {
         result
     }
 }
 
-fn rect_rect_time(a: &DurHitbox, b: &DurHitbox, for_collide: bool) -> BigRational {
-    let mut overlap_start = BigRational::from_float(0.0).unwrap();
-    let mut overlap_end = BigRational::from_float(f64::INFINITY).unwrap();
+fn rect_rect_time(a: &DurHitbox, b: &DurHitbox, for_collide: bool) -> OrdFloat {
+    let mut overlap_start = OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0);
+    let mut overlap_end = OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity));
     for &card in &Card::values() {
         let overlap = a.value.card_overlap(&b.value, card);
         let overlap_vel = a.vel.card_overlap(&b.vel, card);
-        if overlap < BigRational::from_float(0.0).unwrap() {
+        if overlap < OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
             if !for_collide {
-                return BigRational::from_float(0.0).unwrap();
-            } else if overlap_vel <= BigRational::from_float(0.0).unwrap() {
-                return BigRational::from_float(f64::INFINITY).unwrap();
+                return OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0);
+            } else if overlap_vel
+                <= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
+            {
+                return OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity));
             } else {
                 overlap_start = overlap_start.max(-overlap / overlap_vel);
             }
-        } else if overlap_vel < BigRational::from_float(0.0).unwrap() {
+        } else if overlap_vel < OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
+        {
             overlap_end = overlap_end.min(-overlap / overlap_vel);
         }
         if overlap_start >= overlap_end {
             return if for_collide {
-                BigRational::from_float(f64::INFINITY).unwrap()
+                OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
             } else {
-                BigRational::from_float(0.0).unwrap()
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
             };
         }
     }
@@ -97,31 +100,38 @@ fn rect_rect_time(a: &DurHitbox, b: &DurHitbox, for_collide: bool) -> BigRationa
     }
 }
 
-fn circle_circle_time(a: &DurHitbox, b: &DurHitbox, for_collide: bool) -> BigRational {
+fn circle_circle_time(a: &DurHitbox, b: &DurHitbox, for_collide: bool) -> OrdFloat {
     let sign = if for_collide {
-        BigRational::from_float(1.0).unwrap()
+        OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0)
     } else {
-        BigRational::from_float(-1.0).unwrap()
+        OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0)
     };
 
-    let net_rad = (a.value.dims().x + b.value.dims().x) * BigRational::from_float(0.5).unwrap();
+    let net_rad = (a.value.dims().x + b.value.dims().x)
+        * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0);
     let dist = a.value.pos - b.value.pos;
 
     let coeff_c = sign * (net_rad * net_rad - dist.len_sq());
-    if coeff_c > BigRational::from_float(0.0).unwrap() {
-        return BigRational::from_float(0.0).unwrap();
+    if coeff_c > OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
+        return OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0);
     }
 
-    let net_rad_vel = (a.vel.resize.x + b.vel.resize.x) * BigRational::from_float(0.5).unwrap();
+    let net_rad_vel = (a.vel.resize.x + b.vel.resize.x)
+        * OrdFloat::from(Float::with_val_round(prec_max(), 0.5, Round::Up).0);
     let dist_vel = a.vel.value - b.vel.value;
 
     let coeff_a = sign * (net_rad_vel * net_rad_vel - dist_vel.len_sq());
-    let coeff_b =
-        sign * BigRational::from_float(2.0).unwrap() * (net_rad * net_rad_vel - dist * dist_vel);
+    let coeff_b = sign
+        * OrdFloat::from(Float::with_val_round(prec_max(), 2.0, Round::Up).0)
+        * (net_rad * net_rad_vel - dist * dist_vel);
 
     match util::quad_root_ascending(coeff_a, coeff_b, coeff_c) {
-        Some(result) if result >= BigRational::from_float(0.0).unwrap() => result,
-        _ => BigRational::from_float(f64::INFINITY).unwrap(),
+        Some(result)
+            if result >= OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) =>
+        {
+            result
+        }
+        _ => OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity)),
     }
 }
 
@@ -129,8 +139,8 @@ fn rect_circle_time(
     rect: &DurHitbox,
     circle: &DurHitbox,
     for_collide: bool,
-    duration: BigRational,
-) -> BigRational {
+    duration: OrdFloat,
+) -> OrdFloat {
     if for_collide {
         rect_circle_collide_time(rect, circle, duration)
     } else {
@@ -138,14 +148,10 @@ fn rect_circle_time(
     }
 }
 
-fn rect_circle_collide_time(
-    rect: &DurHitbox,
-    circle: &DurHitbox,
-    duration: BigRational,
-) -> BigRational {
+fn rect_circle_collide_time(rect: &DurHitbox, circle: &DurHitbox, duration: OrdFloat) -> OrdFloat {
     let base_time = rect_rect_time(rect, circle, true);
     if base_time >= duration {
-        BigRational::from_float(f64::INFINITY).unwrap()
+        OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity))
     } else {
         let mut rect = *rect;
         rect.value = rect.advanced_shape(base_time);
@@ -156,10 +162,10 @@ fn rect_circle_collide_time(
     }
 }
 
-fn rect_circle_separate_time(rect: &DurHitbox, circle: &DurHitbox) -> BigRational {
+fn rect_circle_separate_time(rect: &DurHitbox, circle: &DurHitbox) -> OrdFloat {
     let base_time = rect_rect_time(rect, circle, false);
-    if base_time == BigRational::from_float(0.0).unwrap() {
-        return BigRational::from_float(0.0).unwrap();
+    if base_time == OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
+        return OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0);
     }
 
     let mut rect = *rect;
@@ -170,20 +176,25 @@ fn rect_circle_separate_time(rect: &DurHitbox, circle: &DurHitbox) -> BigRationa
     circle.value = circle.advanced_shape(base_time);
     circle.vel = circle.vel.negate();
 
-    (base_time - rebased_rect_circle_collide_time(&rect, &circle))
-        .max(BigRational::from_float(0.0).unwrap())
+    (base_time - rebased_rect_circle_collide_time(&rect, &circle)).max(OrdFloat::with_val_round(
+        prec_max(),
+        0.0,
+        Round::Up,
+    ))
 }
 
-fn rebased_rect_circle_collide_time(rect: &DurHitbox, circle: &DurHitbox) -> BigRational {
+fn rebased_rect_circle_collide_time(rect: &DurHitbox, circle: &DurHitbox) -> OrdFloat {
     let sector = rect.value.sector(circle.value.pos);
     if sector.is_corner() {
         let mut corner = DurHitbox::new(PlacedShape::new(
             rect.value.corner(sector),
-            Shape::circle(BigRational::from_float(0.0).unwrap()),
+            Shape::circle(OrdFloat::from(
+                Float::with_val_round(prec_max(), 0.0, Round::Up).0,
+            )),
         ));
         corner.vel.value = rect.vel.corner(sector);
         circle_circle_time(&corner, circle, true)
     } else {
-        BigRational::from_float(0.0).unwrap()
+        OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0)
     }
 }

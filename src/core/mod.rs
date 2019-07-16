@@ -21,9 +21,11 @@ pub use self::collider::*;
 use self::dur_hitbox::{DurHbVel, DurHitbox};
 use crate::geom::shape::PlacedBounds;
 use crate::geom::*;
-use num::BigRational;
-use std::f64;
-
+use rug::{
+    float,
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 #[cfg(feature = "enable_serde")]
 extern crate serde;
 #[cfg(feature = "enable_serde")]
@@ -58,7 +60,7 @@ pub struct HbVel {
     /// Collider will panic if the end time is exceeded without update, at least
     /// in unoptimized builds.  It is ultimately the user's responsibility to
     /// ensure that end times are not exceeded.
-    pub end_time: BigRational,
+    pub end_time: OrdFloat,
 }
 
 impl HbVel {
@@ -68,17 +70,17 @@ impl HbVel {
         HbVel {
             value,
             resize: Vec2::zero(),
-            end_time: BigRational::from_float(f64::INFINITY).unwrap(),
+            end_time: OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity)),
         }
     }
 
     /// Creates an `HbVel` with the given `value` and `end_time`.
     #[inline]
-    pub fn moving_until(value: Vec2, end_time: BigRational) -> HbVel {
+    pub fn moving_until(value: Vec2, end_time: OrdFloat) -> HbVel {
         HbVel {
             value,
             resize: Vec2::zero(),
-            end_time,
+            end_time: OrdFloat::from(end_time),
         }
     }
 
@@ -88,17 +90,17 @@ impl HbVel {
         HbVel {
             value: Vec2::zero(),
             resize: Vec2::zero(),
-            end_time: BigRational::from_float(f64::INFINITY).unwrap(),
+            end_time: OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity)),
         }
     }
 
     /// Creates a stationary `HbVel` with the given `end_time`.
     #[inline]
-    pub fn still_until(end_time: BigRational) -> HbVel {
+    pub fn still_until(end_time: OrdFloat) -> HbVel {
         HbVel {
             value: Vec2::zero(),
             resize: Vec2::zero(),
-            end_time,
+            end_time: OrdFloat::from(end_time),
         }
     }
 }
@@ -142,11 +144,11 @@ impl Hitbox {
         Hitbox { value, vel }
     }
 
-    fn advanced_shape(&self, time: BigRational) -> PlacedShape {
+    fn advanced_shape(&self, time: OrdFloat) -> PlacedShape {
         self.value.advance(self.vel.value, self.vel.resize, time)
     }
 
-    fn validate(&self, min_size: BigRational, present_time: BigRational) {
+    fn validate(&self, min_size: OrdFloat, present_time: OrdFloat) {
         assert!(
             self.vel.end_time >= present_time,
             "end time must exceed present time"
@@ -160,31 +162,32 @@ impl Hitbox {
         assert!(
             self.value.dims().x >= min_size && self.value.dims().y >= min_size,
             "shape width/height must be at least {}",
-            min_size
+            min_size.as_float()
         );
     }
 
-    fn time_until_too_small(&self, min_size: BigRational) -> BigRational {
-        let min_size = min_size * BigRational::from_float(0.9).unwrap();
+    fn time_until_too_small(&self, min_size: OrdFloat) -> OrdFloat {
+        let min_size =
+            min_size * OrdFloat::from(Float::with_val_round(prec_max(), 0.9, Round::Up).0);
         assert!(self.value.dims().x > min_size && self.value.dims().y > min_size);
-        let mut time = BigRational::from_float(f64::INFINITY).unwrap();
-        if self.vel.resize.x < BigRational::from_float(0.0).unwrap() {
-            time = time.min((min_size - self.value.dims().x) / self.vel.value.x);
+        let mut time = OrdFloat::from(Float::with_val(prec_max(), float::Special::Infinity));
+        if self.vel.resize.x < OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
+            time = time.min(&((min_size - self.value.dims().x) / self.vel.value.x));
         }
-        if self.vel.resize.y < BigRational::from_float(0.0).unwrap() {
-            time = time.min((min_size - self.value.dims().y) / self.vel.value.y);
+        if self.vel.resize.y < OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
+            time = time.min(&((min_size - self.value.dims().y) / self.vel.value.y));
         }
         time
     }
 
-    fn to_dur_hitbox(&self, time: BigRational) -> DurHitbox {
+    fn to_dur_hitbox(&self, time: OrdFloat) -> DurHitbox {
         assert!(time <= self.vel.end_time);
         DurHitbox {
             value: self.value,
             vel: DurHbVel {
                 value: self.vel.value,
                 resize: self.vel.resize,
-                duration: self.vel.end_time - time,
+                duration: OrdFloat::from(Float::with_val_round(prec_max(),self.vel.end_time.as_float() - time.as_float(), Round::Up).0),
             },
         }
     }

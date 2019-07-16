@@ -14,7 +14,10 @@
 
 use crate::geom::card::Card;
 use crate::util::{approx_cosine, approx_sine, approx_square_root};
-use num::BigRational;
+use rug::{
+    float::{prec_max, OrdFloat, Round},
+    Float,
+};
 use std::default::Default;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -23,21 +26,21 @@ extern crate serde;
 #[cfg(feature = "enable_serde")]
 use self::serde::*;
 
-/// A 2-D Cartesian vector using finite `BigRational` values.
+/// A 2-D Cartesian vector using finite `OrdFloat` values.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Hash)]
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct Vec2 {
     /// The x-coordinate.
-    pub x: BigRational,
+    pub x: OrdFloat,
     /// The y-coordinate.
-    pub y: BigRational,
+    pub y: OrdFloat,
 }
 
 impl Default for Vec2 {
     fn default() -> Self {
         Self::new(
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
         )
     }
 }
@@ -46,7 +49,7 @@ impl Default for Vec2 {
 impl Vec2 {
     /// Constructs a vector with the given `x` and `y` coordinates.
     #[inline]
-    pub fn new(x: BigRational, y: BigRational) -> Vec2 {
+    pub fn new(x: OrdFloat, y: OrdFloat) -> Vec2 {
         Vec2 { x, y }
     }
 
@@ -60,7 +63,7 @@ impl Vec2 {
     ///
     /// Due to underflow, this might be `0.0` even if `x` and `y` are non-zero
     /// but very small.
-    pub fn len_sq(&self) -> BigRational {
+    pub fn len_sq(&self) -> OrdFloat {
         self.x * self.x + self.y * self.y
     }
 
@@ -68,9 +71,10 @@ impl Vec2 {
     ///
     /// Due to underflow, this might be `0.0` even if `x` and `y` are non-zero
     /// but very small.
-    pub fn len(&self) -> BigRational {
+    pub fn len(&self) -> OrdFloat {
         let value = self.len_sq();
-        let epsilon = value / BigRational::from_float(1000000.0).unwrap();
+        let epsilon =
+            value / OrdFloat::from(Float::with_val_round(prec_max(), 1000000.0, Round::Up).0);
 
         approx_square_root(value, epsilon).unwrap()
     }
@@ -79,7 +83,7 @@ impl Vec2 {
     /// (approximately) `1.0`, or `None` if `self.len() == 0.0`.
     pub fn normalize(&self) -> Option<Vec2> {
         let len = self.len();
-        if len == BigRational::from_float(0.0).unwrap() {
+        if len == OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0) {
             None
         } else {
             Some(Vec2::new(self.x / len, self.y / len))
@@ -88,12 +92,12 @@ impl Vec2 {
     }
 
     /// Computes the square of the Euclidean distance between two vectors.
-    pub fn dist_sq(&self, other: &Vec2) -> BigRational {
+    pub fn dist_sq(&self, other: &Vec2) -> OrdFloat {
         (*self - *other).len_sq()
     }
 
     /// Computes the Euclidean distance between two vectors.
-    pub fn dist(&self, other: &Vec2) -> BigRational {
+    pub fn dist(&self, other: &Vec2) -> OrdFloat {
         (*self - *other).len()
     }
 
@@ -102,44 +106,45 @@ impl Vec2 {
     /// Using `ratio = 0.0` will return `self`, and using `ratio = 1.0` will
     /// return `other`. Can also extrapolate using `ratio > 1.0` or
     /// `ratio < 0.0`.
-    pub fn lerp(&self, other: Vec2, ratio: BigRational) -> Vec2 {
-        (BigRational::from_float(1.0).unwrap() - ratio) * *self + ratio * other
+    pub fn lerp(&self, other: Vec2, ratio: OrdFloat) -> Vec2 {
+        (OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0) - ratio) * *self
+            + ratio * other
     }
 
     /// Rotates the vector by `angle` radians counter-clockwise (assuming +x is
     /// right and +y is up).
-    pub fn rotate(&self, angle: BigRational) -> Vec2 {
-        let epsilon = BigRational::from_float(1e-32).unwrap();
+    pub fn rotate(&self, angle: OrdFloat) -> Vec2 {
+        let epsilon = OrdFloat::from(Float::with_val_round(prec_max(), 1e-32, Round::Up).0);
         let sin = approx_sine(angle.clone(), epsilon.clone()).unwrap();
         let cos = approx_cosine(angle.clone(), epsilon.clone()).unwrap();
         Vec2::new(cos * self.x - sin * self.y, sin * self.x + cos * self.y)
     }
 }
 
-impl Mul<Vec2> for BigRational {
+impl Mul<Vec2> for OrdFloat {
     type Output = Vec2;
     fn mul(self, rhs: Vec2) -> Vec2 {
         Vec2::new(self * rhs.x, self * rhs.y)
     }
 }
 
-impl Mul<BigRational> for Vec2 {
+impl Mul<OrdFloat> for Vec2 {
     type Output = Vec2;
-    fn mul(self, rhs: BigRational) -> Vec2 {
+    fn mul(self, rhs: OrdFloat) -> Vec2 {
         Vec2::new(self.x * rhs, self.y * rhs)
     }
 }
 
-impl MulAssign<BigRational> for Vec2 {
-    fn mul_assign(&mut self, rhs: BigRational) {
+impl MulAssign<OrdFloat> for Vec2 {
+    fn mul_assign(&mut self, rhs: OrdFloat) {
         self.x *= rhs;
         self.y *= rhs;
     }
 }
 
 impl Mul<Vec2> for Vec2 {
-    type Output = BigRational;
-    fn mul(self, rhs: Vec2) -> BigRational {
+    type Output = OrdFloat;
+    fn mul(self, rhs: Vec2) -> OrdFloat {
         self.x * rhs.x + self.y * rhs.y
     }
 }
@@ -183,20 +188,20 @@ impl From<Card> for Vec2 {
     fn from(card: Card) -> Vec2 {
         match card {
             Card::MinusX => v2(
-                BigRational::from_float(-1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
             ),
             Card::MinusY => v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(-1.0).unwrap(),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), -1.0, Round::Up).0),
             ),
             Card::PlusX => v2(
-                BigRational::from_float(1.0).unwrap(),
-                BigRational::from_float(0.0).unwrap(),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
             ),
             Card::PlusY => v2(
-                BigRational::from_float(0.0).unwrap(),
-                BigRational::from_float(1.0).unwrap(),
+                OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+                OrdFloat::from(Float::with_val_round(prec_max(), 1.0, Round::Up).0),
             ),
         }
     }
@@ -204,7 +209,7 @@ impl From<Card> for Vec2 {
 
 /// Shorthand for invoking the `Vec2` constructor.
 #[inline]
-pub fn v2(x: BigRational, y: BigRational) -> Vec2 {
+pub fn v2(x: OrdFloat, y: OrdFloat) -> Vec2 {
     Vec2::new(x, y)
 }
 
@@ -219,7 +224,7 @@ pub fn v2(x: BigRational, y: BigRational) -> Vec2 {
 #[cfg_attr(feature = "enable_serde", derive(Serialize, Deserialize))]
 pub struct DirVec2 {
     dir: Vec2,
-    len: BigRational,
+    len: OrdFloat,
 }
 
 #[allow(clippy::len_without_is_empty)]
@@ -227,7 +232,7 @@ impl DirVec2 {
     /// Constructs a vector with the given direction `dir` and length `len`.
     ///
     /// `dir` is normalized before being set.
-    pub fn new(dir: Vec2, len: BigRational) -> DirVec2 {
+    pub fn new(dir: Vec2, len: OrdFloat) -> DirVec2 {
         DirVec2 {
             dir: dir.normalize().unwrap(),
             len,
@@ -242,7 +247,7 @@ impl DirVec2 {
 
     /// Returns the length of the vector.  May be positive or negative.
     #[inline]
-    pub fn len(&self) -> BigRational {
+    pub fn len(&self) -> OrdFloat {
         self.len
     }
 
@@ -276,10 +281,10 @@ mod tests {
     #[test]
     fn test_serde_vec_2() {
         let elements = [
-            BigRational::from_float(-13.5).unwrap(),
-            BigRational::from_float(-0.0).unwrap(),
-            BigRational::from_float(0.0).unwrap(),
-            BigRational::from_float(12.3).unwrap(),
+            OrdFloat::from(Float::with_val_round(prec_max(), -13.5, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), -0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 0.0, Round::Up).0),
+            OrdFloat::from(Float::with_val_round(prec_max(), 12.3, Round::Up).0),
         ];
         for x in elements.iter() {
             for y in elements.iter() {

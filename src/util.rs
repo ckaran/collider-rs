@@ -39,7 +39,7 @@ use std::hash::Hash;
 /// the input.  This is probably a bad idea, but I'm out of good ideas, so I'm
 /// doing this.
 ///
-/// ```
+/// ```text
 ///            ▄▄▄▄▄        ▄▄     ▄▄▄   ▄▄     ▄▄▄▄   ▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄
 ///            ██▀▀▀██     ████    ███   ██   ██▀▀▀▀█  ██▀▀▀▀▀▀  ██▀▀▀▀██
 ///            ██    ██    ████    ██▀█  ██  ██        ██        ██    ██
@@ -129,7 +129,7 @@ pub(crate) fn bump_f64(value: f64) -> f64 {
 /// both `a` and `b`.  If the result is equal to either `a` or `b`, then
 /// `bump_f64(result)` is returned, otherwise the result is returned unchanged.
 ///
-/// ```
+/// ```text
 ///            ▄▄▄▄▄        ▄▄     ▄▄▄   ▄▄     ▄▄▄▄   ▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄
 ///            ██▀▀▀██     ████    ███   ██   ██▀▀▀▀█  ██▀▀▀▀▀▀  ██▀▀▀▀██
 ///            ██    ██    ████    ██▀█  ██  ██        ██        ██    ██
